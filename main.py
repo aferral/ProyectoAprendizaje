@@ -1,3 +1,7 @@
+from QlearningAgent import AproximateQAgent
+import copy
+from CustomVector import VectorCustom
+import math
 __author__ = 'aferral'
 
 """
@@ -9,9 +13,6 @@ movimiento input
 algoritmos de movimiento de obstaculos
 obstaculos que sigan al jugador
 formas de diferenciar obstaculos
-
-
-
 
 ciclo que dibuja todo
 """
@@ -26,6 +27,13 @@ from random import randint
 WHITE = (255, 255, 255)
 margin = 20
 
+def d(obj1,obj2):
+    return math.sqrt(math.pow((obj1.x-obj2.x),2)+math.pow((obj1.y-obj2.y),2))
+def getAngle(obj1,obj2):
+    return math.atan2(obj2.y,obj2.x)-math.atan2(obj1.y,obj1.x)
+
+def getAngleFromOrigin(origin,orgRot,obj):
+    return
 
 class Obstacle():
 
@@ -37,6 +45,10 @@ class Obstacle():
         self.y = y
         self.radio = radio
         self.player = False
+
+        self.distVision = self.radio * 10
+        self.anguloAct = 0
+        self.anguloVision = math.pi / 180.0 * 90
 
         self.lastTime = 0
 
@@ -71,12 +83,21 @@ class JuegoModelo:
     def __init__(self):
         self.listaObstaculos = []
 
+        self.estadoActual = self.listaObstaculos
+        self.estadoAnt = self.listaObstaculos
+
+        self.lastAction = None
+        self.lastRew = 0
+
+        self.planner = AproximateQAgent(self)
 
         width = 800
         heigth = 600
         self.borders = [margin,width-margin,margin,heigth-margin]
         self.borders1 = [0,width,heigth,0]
         self.dim = (width,heigth)
+
+
 
 
         #Setear jugador
@@ -88,6 +109,52 @@ class JuegoModelo:
 
 
         pass
+    def getFeatures(self):
+        dVis = self.playerObj.distVision
+        mindist = dVis
+        for obj in self.listaObstaculos:
+            if obj != self.playerObj and (d(obj,self.playerObj) < dVis):
+                if ():
+                    mindist = min(mindist,d(obj,self.playerObj))
+        vec = VectorCustom().add(mindist)
+        return vec
+
+    def updateGame(self,tiempo):
+
+        self.estadoAnt = copy.deepcopy(self.listaObstaculos)
+
+        #Hago todos lso mov
+        for elem in self.listaObstaculos:
+            elem.update(tiempo)
+            self.wallColl(elem)
+
+        #Setear estado actual y ant
+        self.estadoActual = self.listaObstaculos
+
+        reward = self.calculateRew()
+        self.observe(self.estadoAnt,self.estadoActual,self.lastAction,reward)
+
+        #Aca va el observe
+        self.doAction(self.planner.getBestAction(self.estadoActual))
+
+
+        pass
+    def calculateReward(self):
+
+        if self.colision(self.playerObj):
+            self.endGame()
+            return -9999999999
+        return 0
+
+    def doAction(self,action):
+        self.playerObj.x = action[0]
+        self.playerObj.y = action[1]
+        pass
+
+    def observe(self,estadoAnt,estado,accion,recomensa):
+        self.planner.update(estadoAnt,accion,estado,recomensa)
+        pass
+
     def wallColl(self,obj):
         print "POsicion objeto",obj.x,obj.y
         for i in range(4):
@@ -118,11 +185,10 @@ class JuegoModelo:
 
     def colision(self,obj1):
         for obj in self.listaObstaculos:
-            if self.d(obj1,obj) > (obj1.radio + obj.radio):
+            if d(obj1,obj) > (obj1.radio + obj.radio):
                 return True
         return False
-    def d(self,obj1,obj2):
-        return math.sqrt(math.pow((obj1.x-obj2.x),2)+math.pow((obj1.y-obj2.y),2))
+
     def addPlayer(self):
         pass
     def newObstacle(self,x,y):
@@ -184,9 +250,9 @@ class JuegoVisual:
             # Clear the screen
             self.screen.fill(WHITE)
             listaObjetos = self.juegomodelo.listaObstaculos
+
+            self.juegomodelo.updateGame(pygame.time.get_ticks())
             for elem in listaObjetos:
-                elem.update(pygame.time.get_ticks())
-                self.juegomodelo.wallColl(elem)
                 elem.draw()
 
             self.drawBorde()
