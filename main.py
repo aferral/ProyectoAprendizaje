@@ -47,6 +47,8 @@ class Obstacle():
     def setPlayer(self):
         self.player = True
         self.color = (255,0,0)
+        self.velX *= 2
+        self.velY *= 2
     def changeSpeed(self,velTuple):
         self.velX = velTuple[0]
         self.velY = velTuple[1]
@@ -124,7 +126,7 @@ class JuegoModelo:
     def addPlayer(self):
         pass
     def newObstacle(self,x,y):
-        self.listaObstaculos.append(Obstacle(5,x,y))
+        self.listaObstaculos.append(Obstacle(10,x,y))
         pass
     def generateRandomObs(self,n):
 
@@ -197,6 +199,6 @@ class JuegoVisual:
         pygame.quit()
 
 modelo = JuegoModelo()
-modelo.generateRandomObs(0)
+modelo.generateRandomObs(10)
 vista = JuegoVisual(modelo)
 vista.loop()
