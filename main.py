@@ -137,7 +137,8 @@ class JuegoModelo:
 
         #Setear estado actual y ant
         self.estadoActual = self.listaObstaculos
-
+	
+	#Es el reward?
         reward = self.calculateRew()
         self.observe(self.estadoAnt,self.estadoActual,self.lastAction,reward)
 
