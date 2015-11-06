@@ -9,13 +9,18 @@ class VectorCustom:
         pass
     def add(self,val):
         self.vals.append(val)
+    def __len__(self):
+        return len(self.vals)
+    def __getitem__(self, item):
+        return self.vals[int(item)]
     def __mul__(self, y ):
 
         sum = 0
         x = self
         if len(x) != len(y):
             return None
-        for inde in range(x.vals):
-            sum += x[inde] * y[inde]
+        for inde,val in enumerate(x.vals):
+            print "inde,val ",inde,val
+            sum += x[int(inde)] * val
         return sum
 

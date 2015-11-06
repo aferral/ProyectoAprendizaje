@@ -4,8 +4,7 @@ import random
 class AproximateQAgent:
 
     def __init__(self,juego):
-        #notar que weight puede tener más dimensiones
-        self.weights = None
+        self.weights = [0]
         self.juego = juego
         self.discount = 1
         #Parametro de aprendizaje
@@ -19,13 +18,16 @@ class AproximateQAgent:
 
 
     def getQvalue(self,estado,accion):
-        self.juego.getFeatures()*self.weights
+        print "El feature es ",self.juego.getFeatures(estado,accion)
+        print "Los pesos son ",self.weights
+        print "El resultado es ",self.juego.getFeatures(estado,accion)*self.weights
+        return self.juego.getFeatures(estado,accion)*self.weights
 
     def getMaxQValue(self,estado):
-        actions = self.juego.legalActions(estado)
+        actions = self.juego.legalActions()
         m = -9999
         for action in actions:
-            qval = self.getMaxQValue(estado,action)
+            qval = self.getQvalue(estado,action)
             m = max(m,qval)
         if len(action) == 0:
             return 0
@@ -52,7 +54,7 @@ class AproximateQAgent:
             return self.computeActionQvalue(estado)
 
     def computeActionQvalue(self,estado):
-        actions = self.juego.legalActions(estado)
+        actions = self.juego.legalActions()
         m = (-9999,0)
         for action in actions:
             qval = self.getMaxQValue(estado,action)
