@@ -159,6 +159,7 @@ class JuegoModelo:
     def doAction(self,action):
         self.playerObj.x = action[0]
         self.playerObj.y = action[1]
+        self.playerObj.anguloAct = action[2]
         pass
 
     def observe(self,estadoAnt,estado,accion,recomensa):
@@ -224,7 +225,7 @@ class JuegoModelo:
 		newX=jugador.x + deltaX
     		newY=jugador.y + deltaY
     		if (newX< and newX>) and (newY> and newY<):
-    	
+    			acciones.append((newX,newY,auxangulo))
     	
     	
     	
