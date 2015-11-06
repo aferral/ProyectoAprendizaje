@@ -4,19 +4,6 @@ from CustomVector import VectorCustom
 import math
 __author__ = 'aferral'
 
-"""
-armar clase obstaculo
-clase jugador contiene cordenadas
-
-movimiento input
-
-algoritmos de movimiento de obstaculos
-obstaculos que sigan al jugador
-formas de diferenciar obstaculos
-
-ciclo que dibuja todo
-"""
-
 import itertools
 
 __author__ = 'aferral'
@@ -32,8 +19,6 @@ def d(obj1,obj2):
 def getAngle(obj1,obj2):
     return math.atan2(obj2.y,obj2.x)-math.atan2(obj1.y,obj1.x)
 
-def getAngleFromOrigin(origin,orgRot,obj):
-    return
 
 class Obstacle():
 
@@ -49,7 +34,7 @@ class Obstacle():
         self.distVision = self.radio * 10
         self.anguloAct = 0
         self.anguloVision = math.pi / 180.0 * 90
-        self.anguloGiro =math.pi / 180.0 *10
+        self.anguloGiro =math.pi / 180.0 *72
 
 
         self.lastTime = 0
@@ -61,6 +46,7 @@ class Obstacle():
     def setPlayer(self):
         self.player = True
         self.color = (255,0,0)
+        self.distVision = 10
         self.velX *= 2
         self.velY *= 2
     def changeSpeed(self,velTuple):
@@ -80,6 +66,10 @@ class Obstacle():
     def draw(self):
         if self.screen != None:
             pygame.draw.circle(self.screen,self.color,(int(self.x),int(self.y)),self.radio,1)
+        if self.player:
+            pygame.draw.circle(self.screen,(0,255,0),(int(self.x),int(self.y)),self.distVision,1)
+
+
     #cree esta funcion para saber si esta en el angulo de vision 
     def estaenvision(self,objm):
         angulo = math.atan2(objm.y-self.y,objm.x-self.x)*180/math.pi
@@ -123,23 +113,24 @@ class JuegoModelo:
         playerObj = estado[len(estado) - 1]
         dVis = playerObj.distVision
         mindist = dVis
+        print "Distancia vision ",dVis
         vec = VectorCustom()
         for obj in self.listaObstaculos:
             if obj != playerObj and (d(obj,playerObj) < dVis):
                 #Agregue la funcion para saber el angulo
-                if (playerObj.estaenvision(obj)):
-                    mindist = min(mindist,d(obj,playerObj))
+                # if (playerObj.estaenvision(obj)):
+                mindist = min(mindist,d(obj,playerObj))
         vec.add(mindist)
 
         return vec
 
     def updateGame(self,tiempo):
-
+        print "El TIEMPO es ",tiempo
         self.estadoAnt = copy.deepcopy(self.listaObstaculos)
 
         #Hago todos lso mov
         for elem in self.listaObstaculos:
-            elem.update(self.deltaTime)
+            elem.update(tiempo)
             self.wallColl(elem)
 
         #Setear estado actual y ant
@@ -173,13 +164,11 @@ class JuegoModelo:
         pass
 
     def wallColl(self,obj):
-        print "POsicion objeto",obj.x,obj.y
         for i in range(4):
             # bla = [self.borders[2],self.borders[3],self.borders[0],self.borders[1]]
             # pared=bla[i]
             pared=self.borders1[i]
             margin=pared
-            print i,pared
             if i == 0 and (pared-(obj.x - obj.radio)) > 0:
                 print "Choque en 0"
                 obj.x = obj.radio + margin
@@ -202,14 +191,15 @@ class JuegoModelo:
 
     def colision(self,obj1):
         for obj in self.listaObstaculos:
-            if (d(obj1,obj) > (obj1.radio + obj.radio) and obj1 != obj):
+            if (d(obj1,obj) < (obj1.radio + obj.radio) and obj1 != obj):
+                print "COLLIDE"
                 return True
         return False
 
     def addPlayer(self):
         pass
     def newObstacle(self,x,y):
-        self.listaObstaculos.append(Obstacle(10,x,y))
+        self.listaObstaculos.append(Obstacle(30,x,y))
         pass
     def generateRandomObs(self,n):
 
@@ -222,22 +212,32 @@ class JuegoModelo:
     #estooo!!
     def legalActions(self):
         jugador=self.playerObj
-        self.borders1
-        ponderaciones=[-2,-1,0,1,2]
+        ponderaciones=[0,-2*math.pi / 180.0,-1*math.pi / 180.0,1*math.pi / 180.0,2*math.pi / 180.0]
         acciones=[]
-        for i in ponderaciones:
-            auxangulo=i*jugador.anguloGiro+jugador.anguloAct
+        for index,angulo in enumerate(ponderaciones):
+            print "Sacando de ponderaciones ",angulo
+            auxangulo = angulo*jugador.anguloGiro+jugador.anguloAct
+            print "Aux angulo ",auxangulo
             velModulo=math.sqrt(jugador.velX**2+jugador.velY**2)
-            deltaX= self.deltaTime*velModulo*math.cos(auxangulo)
-            deltaY= self.deltaTime*velModulo*math.sin(auxangulo)
+            print "velModulo ",velModulo
+            deltaX= self.deltaTime*velModulo*math.cos(auxangulo)*1000
+            deltaY= self.deltaTime*velModulo*math.sin(auxangulo)*1000
             newX=jugador.x + deltaX
             newY=jugador.y + deltaY
-            if (newX<self.borders1[2] and newX>self.borders1[3]) and (newY>self.borders1[0] and newY<self.borders1[1]):
-                self.superestados[i+2]=(deltaX,deltaY)
+            print "new X y newY ",newX,newY
+            if (newX<self.borders1[1] and newX>self.borders1[0]) and (newY>self.borders1[3] and newY<self.borders1[2]):
+                # print "Condicion newX<self.borders1[2] ",newX<self.borders1[2]
+                # print "new X y newY ",newX,newY
+
+
+                self.superestados[index]=(newX,newY)
                 acciones.append(auxangulo)
             else:
-                self.superestados[i+2]=(None)
-        print "LA salidoa es ",acciones
+                self.superestados[index]=(None)
+        # print "LA salidoa es ",acciones
+        if len(acciones) == 0:
+            raise Exception("TIRO 0 ACCIONES");
+
         return acciones
 
 
@@ -253,7 +253,7 @@ class JuegoVisual:
         for elem in self.juegomodelo.listaObstaculos:
             elem.setDraw(self.screen)
         self.clock = pygame.time.Clock()
-
+        self.deltaTime = 0.0
 
     def drawBorde(self):
         bordes = self.juegomodelo.borders
@@ -269,6 +269,7 @@ class JuegoVisual:
 
 
     def loop(self):
+        vel = 0.1
         while not self.done:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -276,27 +277,34 @@ class JuegoVisual:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
                         print "Izq"
-                        self.juegomodelo.playerObj.changeSpeed(1,0)
+                        self.juegomodelo.playerObj.changeSpeed((1,0))
                     if event.key == pygame.K_RIGHT:
                         print "Derecha"
-                        self.juegomodelo.playerObj.changeSpeed(-1,0)
+                        self.juegomodelo.playerObj.changeSpeed((-1,0))
                     if event.key == pygame.K_UP:
                         print "Arriba"
-                        self.juegomodelo.playerObj.changeSpeed(0,1)
+                        self.juegomodelo.playerObj.changeSpeed((0,1))
                     if event.key == pygame.K_DOWN:
                         print "Down"
-                        self.juegomodelo.playerObj.changeSpeed(0,-1)
+                        self.juegomodelo.playerObj.changeSpeed((0,-1))
             # Clear the screen
             self.screen.fill(WHITE)
             listaObjetos = self.juegomodelo.listaObstaculos
 
-            self.juegomodelo.updateGame(pygame.time.get_ticks())
+            self.juegomodelo.updateGame(self.deltaTime)
             for elem in listaObjetos:
                 elem.draw()
 
+            #Elementos auxiliares
+            for point in self.juegomodelo.superestados:
+                if point == None:
+                    continue
+                print "Punto sigiente ",point
+                pygame.draw.circle(self.screen,(255,0,0),(int(point[0]),int(point[1])),2,1)
+
             self.drawBorde()
             # Limit to 60 frames per second
-            self.deltaTime = self.clock.tick(15)
+            self.deltaTime = self.clock.tick(15) * vel
 
             # Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
@@ -304,6 +312,6 @@ class JuegoVisual:
         pygame.quit()
 
 modelo = JuegoModelo()
-modelo.generateRandomObs(10)
+modelo.generateRandomObs(2)
 vista = JuegoVisual(modelo)
 vista.loop()

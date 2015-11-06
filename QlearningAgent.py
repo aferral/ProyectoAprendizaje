@@ -4,14 +4,14 @@ import random
 class AproximateQAgent:
 
     def __init__(self,juego):
-        self.weights = [0]
+        self.weights = [1]
         self.juego = juego
         self.discount = 1
         #Parametro de aprendizaje
         self.alpha = 0.5
 
         #Parametro de exploracion
-        self.epsilon = 0.05
+        self.epsilon =0
 
     def getWeights(self):
         return self.weights

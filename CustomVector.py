@@ -13,6 +13,8 @@ class VectorCustom:
         return len(self.vals)
     def __getitem__(self, item):
         return self.vals[int(item)]
+    def __repr__(self):
+        return str(self.vals)
     def __mul__(self, y ):
 
         sum = 0
