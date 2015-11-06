@@ -41,6 +41,8 @@ class Obstacle():
         #Variables modelo
         self.velX = 1
         self.velY = 1
+        self.velMod= math.sqrt(self.velX**2+self.velY**2)
+        
         self.x = x
         self.y = y
         self.radio = radio
@@ -161,9 +163,9 @@ class JuegoModelo:
         return 0
 
     def doAction(self,action):
-        self.playerObj.x = action[0]
-        self.playerObj.y = action[1]
-        self.playerObj.anguloAct = action[2]
+        self.playerObj.anguloAct = action[0]
+        self.playerObj.velX = math.cos(action[0])
+        self.playerObj.velY = math.sin(action[0])
         pass
 
     def observe(self,estadoAnt,estado,accion,recomensa):
