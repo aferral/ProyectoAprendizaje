@@ -20,7 +20,6 @@ class VectorCustom:
         if len(x) != len(y):
             return None
         for inde,val in enumerate(x.vals):
-            print "inde,val ",inde,val
             sum += x[int(inde)] * val
         return sum
 

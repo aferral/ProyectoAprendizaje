@@ -29,7 +29,7 @@ class AproximateQAgent:
         for action in actions:
             qval = self.getQvalue(estado,action)
             m = max(m,qval)
-        if len(action) == 0:
+        if len(actions) == 0:
             return 0
         return m
 
@@ -37,9 +37,10 @@ class AproximateQAgent:
         sample = reward + self.discount * self.getMaxQValue(proxState)
         diff = sample - self.getQvalue(estado,accion)
 
-        for feat in self.juego.getFeatures(estado,accion):
-            val = self.juego.getFeatures(estado,accion)[feat]
-            self.weights[feat] = self.weights[feat] + self.alpha*diff*val
+        for inde,feat in enumerate(self.juego.getFeatures(estado,accion)):
+            print "Analizando feature ",inde
+            val = self.juego.getFeatures(estado,accion)[inde]
+            self.weights[inde] = self.weights[inde] + self.alpha*diff*val
 
 
     def getBestAction(self,estado):
@@ -57,9 +58,9 @@ class AproximateQAgent:
         actions = self.juego.legalActions()
         m = (-9999,0)
         for action in actions:
-            qval = self.getMaxQValue(estado,action)
+            qval = self.getQvalue(estado,action)
             if m[0] < qval:
                 m = (qval,action)
-        if len(action) == 0:
+        if len(actions) == 0:
             return 0
         return m[1]

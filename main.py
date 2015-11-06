@@ -49,7 +49,7 @@ class Obstacle():
         self.distVision = self.radio * 10
         self.anguloAct = 0
         self.anguloVision = math.pi / 180.0 * 90
-	self.anguloGiro =math.pi / 180.0 *10
+        self.anguloGiro =math.pi / 180.0 *10
 
 
         self.lastTime = 0
@@ -68,8 +68,7 @@ class Obstacle():
         self.velY = velTuple[1]
 
     def update(self,time):
-    	#cambair a dt;
-        delta = self.deltaTime
+        delta = time
         self.x += int(self.velX*delta)
         self.y += int(self.velY*delta)
         self.lastTime = time
@@ -80,15 +79,15 @@ class Obstacle():
         pass
     def draw(self):
         if self.screen != None:
-            pygame.draw.circle(self.screen,self.color,(self.x,self.y),self.radio,1)
+            pygame.draw.circle(self.screen,self.color,(int(self.x),int(self.y)),self.radio,1)
     #cree esta funcion para saber si esta en el angulo de vision 
-    def estaenvision(self,objm)
-	    angulo=atan2(objm.y-self.y,objm.x-self.x)*180/math.pi
-	    if angulo <0
-		    angulo=angulo+360
-	    if angulo-self.angvision<rangovision
-	    	return True
-	    return False
+    def estaenvision(self,objm):
+        angulo = math.atan2(objm.y-self.y,objm.x-self.x)*180/math.pi
+        if angulo <0:
+            angulo=angulo+360
+        if self.anguloAct-self.anguloVision<angulo and angulo<self.anguloVision+self.anguloAct:
+            return True
+        return False
 
 class JuegoModelo:
     def __init__(self):
@@ -107,29 +106,31 @@ class JuegoModelo:
         self.borders = [margin,width-margin,margin,heigth-margin]
         self.borders1 = [0,width,heigth,0]
         self.dim = (width,heigth)
-	self.deltaTime=15/1000.0
+        self.deltaTime=15/1000.0
 
-	#agrego acciones para elejir mejor q value
-	self.superestados=[0,0,0,0,0]
+
 
         #Setear jugador
         self.playerObj = Obstacle(5,100,100)
         self.playerObj.setPlayer()
 
         self.listaObstaculos.append(self.playerObj)
-
+        self.superestados=[0,0,0,0,0]
 
 
         pass
-    def getFeatures(self):
-        dVis = self.playerObj.distVision
+    def getFeatures(self,estado,accion):
+        playerObj = estado[len(estado) - 1]
+        dVis = playerObj.distVision
         mindist = dVis
+        vec = VectorCustom()
         for obj in self.listaObstaculos:
-            if obj != self.playerObj and (d(obj,self.playerObj) < dVis):
-            	#Agregue la funcion para saber el angulo 
-                if (self.playerObj.estaenvision(obj)):
-                    mindist = min(mindist,d(obj,self.playerObj))
-        vec = VectorCustom().add(mindist)
+            if obj != playerObj and (d(obj,playerObj) < dVis):
+                #Agregue la funcion para saber el angulo
+                if (playerObj.estaenvision(obj)):
+                    mindist = min(mindist,d(obj,playerObj))
+        vec.add(mindist)
+
         return vec
 
     def updateGame(self,tiempo):
@@ -138,14 +139,14 @@ class JuegoModelo:
 
         #Hago todos lso mov
         for elem in self.listaObstaculos:
-            elem.update(tiempo)
+            elem.update(self.deltaTime)
             self.wallColl(elem)
 
         #Setear estado actual y ant
         self.estadoActual = self.listaObstaculos
 	
-	#Es el reward?
-        reward = self.calculateRew()
+        #Es el reward?
+        reward = self.calculateReward()
         self.observe(self.estadoAnt,self.estadoActual,self.lastAction,reward)
 
         #Aca va el observe
@@ -159,11 +160,12 @@ class JuegoModelo:
             self.endGame()
             return -9999999999
         return 0
-
+    def endGame(self):
+        pass
     def doAction(self,action):
-        self.playerObj.x = action[0]
-        self.playerObj.y = action[1]
-        self.playerObj.anguloAct = action[2]
+        self.playerObj.anguloAct = action
+        self.playerObj.velX = math.cos(action)
+        self.playerObj.velY = math.sin(action)
         pass
 
     def observe(self,estadoAnt,estado,accion,recomensa):
@@ -200,7 +202,7 @@ class JuegoModelo:
 
     def colision(self,obj1):
         for obj in self.listaObstaculos:
-            if d(obj1,obj) > (obj1.radio + obj.radio):
+            if (d(obj1,obj) > (obj1.radio + obj.radio) and obj1 != obj):
                 return True
         return False
 
@@ -219,25 +221,26 @@ class JuegoModelo:
         pass
     #estooo!!
     def legalActions(self):
-    	jugador=self.playerObj
-    	self.borders1
-    	ponderaciones=[-2,-1,0,1,2]
-    	acciones=[]
-    	for i in ponderaciones:
-    		auxangulo=i*jugador.anguloGiro+jugador.anguloAct
-    		velModulo=math.sqrt(jugador.velX**2+jugador.velY**2)
-    		deltaX= self.deltaTime*velModulo*cos(auxangulo)
-		deltaY= self.deltaTime*velModulo*sin(auxangulo)
-		newX=jugador.x + deltaX
-    		newY=jugador.y + deltaY
-    		if (newX<self.borders1[2] and newX>self.borders1[3]) and (newY>self.borders1[0] and newY<self.borders1[1]):
-    			self.superestados[i+2]=(deltaX,deltaY)
-    			acciones.append(auxangulo)
-    		else:
-    			self.superestados[i+2]=(None)
-    	return acciones
-    	
-    	
+        jugador=self.playerObj
+        self.borders1
+        ponderaciones=[-2,-1,0,1,2]
+        acciones=[]
+        for i in ponderaciones:
+            auxangulo=i*jugador.anguloGiro+jugador.anguloAct
+            velModulo=math.sqrt(jugador.velX**2+jugador.velY**2)
+            deltaX= self.deltaTime*velModulo*math.cos(auxangulo)
+            deltaY= self.deltaTime*velModulo*math.sin(auxangulo)
+            newX=jugador.x + deltaX
+            newY=jugador.y + deltaY
+            if (newX<self.borders1[2] and newX>self.borders1[3]) and (newY>self.borders1[0] and newY<self.borders1[1]):
+                self.superestados[i+2]=(deltaX,deltaY)
+                acciones.append(auxangulo)
+            else:
+                self.superestados[i+2]=(None)
+        print "LA salidoa es ",acciones
+        return acciones
+
+
 class JuegoVisual:
     def __init__(self,juegomodelo):
         self.done = False
@@ -246,9 +249,6 @@ class JuegoVisual:
         pygame.init()
         self.screen = pygame.display.set_mode(
             [self.juegomodelo.dim[0], self.juegomodelo.dim[1]])
-	#agrego variable que sabe cuales son las acciones
-	
-	self.
 
         for elem in self.juegomodelo.listaObstaculos:
             elem.setDraw(self.screen)
