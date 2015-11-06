@@ -86,7 +86,7 @@ class Obstacle():
 	    angulo=atan2(objm.y-self.y,objm.x-self.x)*180/math.pi
 	    if angulo <0
 		    angulo=angulo+360
-	    if angulo-self.angvision<rangovision
+	    if self.anguloAct-self.anguloVision<angulo and angulo<self.anguloVision+self.anguloAct
 	    	return True
 	    return False
 
