@@ -68,7 +68,8 @@ class Obstacle():
         self.velY = velTuple[1]
 
     def update(self,time):
-        delta = (time - self.lastTime) * 0.1
+    	#cambair a dt;
+        delta = self.deltaTime
         self.x += int(self.velX*delta)
         self.y += int(self.velY*delta)
         self.lastTime = time
@@ -105,7 +106,7 @@ class JuegoModelo:
         self.borders = [margin,width-margin,margin,heigth-margin]
         self.borders1 = [0,width,heigth,0]
         self.dim = (width,heigth)
-
+	self.deltaTime=15/1000.0
 
 
 
@@ -220,13 +221,14 @@ class JuegoModelo:
     	acciones=[]
     	for i in ponderaciones:
     		auxangulo=i*jugador.anguloGiro+jugador.anguloAct
-    		deltaX= deltaTime*Vel*cos(auxangulo)
-		deltaY= deltaTime*Vel*sin(auxangulo)
+    		velModulo=math.sqrt(jugador.velX**2+jugador.velY**2)
+    		deltaX= self.deltaTime*velModulo*cos(auxangulo)
+		deltaY= self.deltaTime*velModulo*sin(auxangulo)
 		newX=jugador.x + deltaX
     		newY=jugador.y + deltaY
-    		if (newX< and newX>) and (newY> and newY<):
+    		if (newX<self.borders1[2] and newX>self.borders1[3]) and (newY>self.borders1[0] and newY<self.borders1[1]):
     			acciones.append((newX,newY,auxangulo))
-    	
+    	return acciones
     	
     	
 class JuegoVisual:
@@ -284,7 +286,7 @@ class JuegoVisual:
 
             self.drawBorde()
             # Limit to 60 frames per second
-            self.clock.tick(15)
+            self.deltaTime = self.clock.tick(15)
 
             # Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
