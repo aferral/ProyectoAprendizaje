@@ -210,6 +210,10 @@ class JuegoModelo:
             self.newObstacle(xcord,ycord)
 
         pass
+    def legalActions(self):
+    	self.playerObj
+    	self.borders1
+    	
 class JuegoVisual:
     def __init__(self,juegomodelo):
         self.done = False
