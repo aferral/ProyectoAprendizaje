@@ -78,6 +78,13 @@ class Obstacle():
     def draw(self):
         if self.screen != None:
             pygame.draw.circle(self.screen,self.color,(self.x,self.y),self.radio,1)
+    def estaenvision(self,objm)
+	    angulo=atan2(objm.y-self.y,objm.x-self.x)*180/math.pi
+	    if angulo <0
+		    angulo=angulo+360
+	    if angulo-self.angvision<rangovision
+	    	return True
+	    return False
 
 class JuegoModelo:
     def __init__(self):
@@ -114,7 +121,7 @@ class JuegoModelo:
         mindist = dVis
         for obj in self.listaObstaculos:
             if obj != self.playerObj and (d(obj,self.playerObj) < dVis):
-                if ():
+                if (self.playerObj.estaenvision(obj)):
                     mindist = min(mindist,d(obj,self.playerObj))
         vec = VectorCustom().add(mindist)
         return vec
