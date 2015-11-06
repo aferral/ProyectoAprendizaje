@@ -41,6 +41,7 @@ class AproximateQAgent:
 
 
     def getBestAction(self,estado):
+        #falta la variable estado
         actions = self.juego.legalActions()
         action = None
         if len(actions) == 0:
