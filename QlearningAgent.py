@@ -4,6 +4,7 @@ import random
 class AproximateQAgent:
 
     def __init__(self,juego):
+        #notar que weight puede tener más dimensiones
         self.weights = None
         self.juego = juego
         self.discount = 1
