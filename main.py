@@ -16,7 +16,7 @@ formas de diferenciar obstaculos
 
 ciclo que dibuja todo
 """
-
+#
 import itertools
 
 __author__ = 'aferral'
