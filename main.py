@@ -109,7 +109,8 @@ class JuegoModelo:
         self.dim = (width,heigth)
 	self.deltaTime=15/1000.0
 
-
+	#agrego acciones para elejir mejor q value
+	self.superestados=[0,0,0,0,0]
 
         #Setear jugador
         self.playerObj = Obstacle(5,100,100)
@@ -230,7 +231,10 @@ class JuegoModelo:
 		newX=jugador.x + deltaX
     		newY=jugador.y + deltaY
     		if (newX<self.borders1[2] and newX>self.borders1[3]) and (newY>self.borders1[0] and newY<self.borders1[1]):
-    			acciones.append((newX,newY,auxangulo))
+    			self.superestados[i+2]=(deltaX,deltaY)
+    			acciones.append(auxangulo)
+    		else:
+    			self.superestados[i+2]=(None)
     	return acciones
     	
     	
@@ -242,6 +246,9 @@ class JuegoVisual:
         pygame.init()
         self.screen = pygame.display.set_mode(
             [self.juegomodelo.dim[0], self.juegomodelo.dim[1]])
+	#agrego variable que sabe cuales son las acciones
+	
+	self.
 
         for elem in self.juegomodelo.listaObstaculos:
             elem.setDraw(self.screen)
