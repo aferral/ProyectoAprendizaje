@@ -213,8 +213,20 @@ class JuegoModelo:
 
         pass
     def legalActions(self):
-    	self.playerObj
+    	jugador=self.playerObj
     	self.borders1
+    	ponderaciones=[-2,-1,0,1,2]
+    	acciones=[]
+    	for i in ponderaciones:
+    		auxangulo=i*jugador.anguloGiro+jugador.anguloAct
+    		deltaX= deltaTime*Vel*cos(auxangulo)
+		deltaY= deltaTime*Vel*sin(auxangulo)
+		newX=jugador.x + deltaX
+    		newY=jugador.y + deltaY
+    		if (newX< and newX>) and (newY> and newY<):
+    	
+    	
+    	
     	
 class JuegoVisual:
     def __init__(self,juegomodelo):
