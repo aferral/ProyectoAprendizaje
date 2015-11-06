@@ -49,6 +49,8 @@ class Obstacle():
         self.distVision = self.radio * 10
         self.anguloAct = 0
         self.anguloVision = math.pi / 180.0 * 90
+	self.anguloGiro =math.pi / 180.0 *10
+
 
         self.lastTime = 0
 
