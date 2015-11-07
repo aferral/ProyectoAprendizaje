@@ -142,7 +142,7 @@ class JuegoModelo:
         vec.add(superdistance)
 
         #return vec
-        return superdistance
+        return vec
     def updateGame(self,tiempo):
  #       print "El TIEMPO es ",tiempo
         self.estadoAnt = copy.deepcopy(self.listaObstaculos)
