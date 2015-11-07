@@ -52,7 +52,7 @@ class Obstacle():
     def setPlayer(self):
         self.player = True
         self.color = (255,0,0)
-        self.distVision = 10
+        self.distVision = self.radio + 10
         self.velX *= 2
         self.velY *= 2
     def changeSpeed(self,velTuple):
@@ -75,8 +75,8 @@ class Obstacle():
     def draw(self):
         if self.screen != None:
             pygame.draw.circle(self.screen,self.color,(int(self.x),int(self.y)),self.radio,1)
-        if self.player:
-            pygame.draw.circle(self.screen,(0,255,0),(int(self.x),int(self.y)),self.distVision,1)
+        # if self.player:
+        #     pygame.draw.circle(self.screen,(0,255,0),(int(self.x),int(self.y)),self.distVision,1)
 
 
     #cree esta funcion para saber si esta en el angulo de vision 
@@ -100,8 +100,8 @@ class JuegoModelo:
 
         self.planner = AproximateQAgent(self)
 
-        width = 800
-        heigth = 600
+        width = 200
+        heigth = 500
         self.borders = [margin,width-margin,margin,heigth-margin]
         self.borders1 = [0,width,heigth,0]
         self.borders2 = [0,width,heigth,0]
@@ -112,79 +112,105 @@ class JuegoModelo:
 
 
         #Setear jugador
-        self.playerObj = Obstacle(5,100,100)
-        jugadorradio=self.playerObj.radio
+        playerObj = Obstacle(30,100,100)
+        jugadorradio=playerObj.radio
         self.borders2 = [0+ jugadorradio,width- jugadorradio,heigth- jugadorradio,0+ jugadorradio]
 
-        self.playerObj.setPlayer()
+        playerObj.setPlayer()
 
-        self.listaObstaculos.append(self.playerObj)
+        self.listaObstaculos.append(playerObj)
         self.superestados=[0,0,0,0,0]
 
 
         pass
+    def getPlayer(self,estado):
+        return estado[0]
+
     def getFeatures(self,estado,accion):
-        playerObj = estado[len(estado) - 1]
+        playerObj = self.getPlayer(estado)
         dVis = playerObj.distVision
         mindist = dVis
         #print "Distancia vision ",dVis
         vec = VectorCustom()
-        for obj in self.listaObstaculos:
-            if obj != playerObj and (d(obj,playerObj) < mindist):
-                #Agregue la funcion para saber el angulo
-                # if (playerObj.estaenvision(obj)):
-                mindist = d(obj,playerObj)
-                Xaux=obj.x
-                Yaux=obj.y
-        #print("aaaaaaa"),accion
+
+        #Caso base no hay obstaculos la distancia a enemigo es la distancia de visualizacion (no ve nada)
+        distNextStep = dVis
+
         deltaX= self.deltaTime*playerObj.velModulo*math.cos(accion)*2000
         deltaY= self.deltaTime*playerObj.velModulo*math.sin(accion)*2000
         FuturoX=playerObj.x + deltaX
         FuturoY=playerObj.y + deltaY
 
-        superdistance=distance(FuturoX,FuturoY,Xaux,Yaux)
-        #vec.add(mindist)
-        vec.add(superdistance)
+        # and (d(obj,playerObj) < mindist)
 
-        #return vec
+        for obj in estado:
+            if obj != playerObj :
+                #Agregue la funcion para saber el angulo
+                # if (playerObj.estaenvision(obj)):
+                mindist = d(obj,playerObj)
+                Xaux=obj.x
+                Yaux=obj.y
+                distNextStep=distance(FuturoX,FuturoY,Xaux,Yaux)
+
+        #vec.add(mindist)
+        vec.add(distNextStep)
         return vec
+
     def updateGame(self,tiempo):
- #       print "El TIEMPO es ",tiempo
         self.estadoAnt = copy.deepcopy(self.listaObstaculos)
+
 
         #Hago todos lso mov
         for elem in self.listaObstaculos:
+
             elem.update(tiempo)
             self.wallColl(elem)
 
         #Setear estado actual y ant
         self.estadoActual = self.listaObstaculos
+
+        if self.ended:
+            self.ended = False
+            playerObj = self.getPlayer(self.estadoActual)
+            playerObj.toStart()
+            return
+
+
+        # print "Valor posicion objx ACT",self.estadoActual[1].x,self.estadoActual[1].y
+        # print "Valor posicion objx ANT",self.estadoAnt[1].x,self.estadoAnt[1].y
+
+        assert ((self.estadoActual[0].x,self.estadoActual[1].y) !=(self.estadoAnt[1].x,self.estadoAnt[1].y) )
 	
         #Es el reward?
-        reward = self.calculateReward()
+        reward = self.calculateReward(self.estadoActual)
         self.observe(self.estadoAnt,self.estadoActual,self.lastAction,reward)
 
         #Aca va el observe
-        self.doAction(self.planner.getBestAction(self.estadoActual))
-
-
+        self.doAction(self.estadoActual,self.planner.getBestAction(self.estadoActual))
         pass
-    def calculateReward(self):
 
-        if self.colision(self.playerObj):
+    def calculateReward(self,estado):
+        playerObj = self.getPlayer(estado)
+        if self.colision(playerObj):
+            print "COLLISION DETECTADA"
             self.endGame()
-            return -99999
-        return 0
+            return -10
+        return +1
     def endGame(self): #Me complico resetear el juego simplemente mantendre la transicion plana
         self.ended = True
         pass
-    def doAction(self,action):
-        if self.ended:
-            self.playerObj.toStart()
-            return
-        self.playerObj.anguloAct = action
-        self.playerObj.velX =self.playerObj.velModulo*math.cos(action)
-        self.playerObj.velY =self.playerObj.velModulo*math.sin(action)
+    def doAction(self,estado,action):
+        playerObj = self.getPlayer(estado)
+
+        deltaX= self.deltaTime*playerObj.velModulo*math.cos(action)*2000
+        deltaY= self.deltaTime*playerObj.velModulo*math.sin(action)*2000
+        FuturoX=playerObj.x + deltaX
+        FuturoY=playerObj.y + deltaY
+
+        # playerObj.anguloAct = action
+        #
+        # playerObj.velX =playerObj.velModulo*math.cos(action)
+        # playerObj.velY =playerObj.velModulo*math.sin(action)
 
         self.lastAction = action
         pass
@@ -241,8 +267,8 @@ class JuegoModelo:
 
         pass
     #estooo!!
-    def legalActions(self):
-        jugador=self.playerObj
+    def legalActions(self,estado):
+        jugador= self.getPlayer(estado)
         ponderaciones=[0,-2,-1,1,2]
         acciones=[]
         for index,angulo in enumerate(ponderaciones):
@@ -308,16 +334,16 @@ class JuegoVisual:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
                         print "Izq"
-                        self.juegomodelo.playerObj.changeSpeed((1,0))
+                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((1,0))
                     if event.key == pygame.K_RIGHT:
                         print "Derecha"
-                        self.juegomodelo.playerObj.changeSpeed((-1,0))
+                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((-1,0))
                     if event.key == pygame.K_UP:
                         print "Arriba"
-                        self.juegomodelo.playerObj.changeSpeed((0,1))
+                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((0,1))
                     if event.key == pygame.K_DOWN:
                         print "Down"
-                        self.juegomodelo.playerObj.changeSpeed((0,-1))
+                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((0,-1))
             # Clear the screen
             self.screen.fill(WHITE)
             listaObjetos = self.juegomodelo.listaObstaculos
@@ -337,7 +363,7 @@ class JuegoVisual:
 
             self.drawBorde()
             # Limit to 60 frames per second
-            self.deltaTime = self.clock.tick(15) * vel
+            self.deltaTime = self.clock.tick(3) * vel
 
             # Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
@@ -345,6 +371,6 @@ class JuegoVisual:
         pygame.quit()
 
 modelo = JuegoModelo()
-modelo.generateRandomObs(6)
+modelo.generateRandomObs(1)
 vista = JuegoVisual(modelo)
 vista.loop()
