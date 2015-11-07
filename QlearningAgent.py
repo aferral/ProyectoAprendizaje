@@ -1,3 +1,4 @@
+import sys
 from CustomVector import VectorCustom
 
 __author__ = 'aferral'
@@ -8,9 +9,9 @@ class AproximateQAgent:
 
     def __init__(self,juego):
         self.weights = VectorCustom()
-        self.weights.add(10)
+        self.weights.add(0)
         self.juego = juego
-        self.discount = 1
+        self.discount = 0.3
         #Parametro de aprendizaje
         self.alpha = 0.5
 
@@ -22,21 +23,24 @@ class AproximateQAgent:
 
 
     def getQvalue(self,estado,accion):
-       # print "El feature es ",self.juego.getFeatures(estado,accion)
-       # print "Los pesos son ",self.weights
-       # print "El resultado es ",self.juego.getFeatures(estado,accion)*self.weights
+        # print "El feature es ",self.juego.getFeatures(estado,accion)
+        # print "Los pesos son ",self.weights
+        # print "El resultado es ",self.juego.getFeatures(estado,accion)*self.weights
         #print "lllllllllllllllllllllllllllll",accion
-        print("wighttt"),self.weights
-        print "lllllllllllllllllllllllllllll",self.juego.getFeatures(estado,accion)
-        print("uuuuu"),self.juego.getFeatures(estado,accion)*self.weights
+        # print "Weight",self.weights
+        # print "Features ",self.juego.getFeatures(estado,accion)
+        # print ""
+        # print("uuuuu"),self.juego.getFeatures(estado,accion)*self.weights
         return self.juego.getFeatures(estado,accion)*self.weights
 
     def getMaxQValue(self,estado):
         actions = self.juego.legalActions()
-        m = -9999
+        m = -sys.maxint
         #print("uuuuuuuu"),actions
         for action in actions:
             qval = self.getQvalue(estado,action)
+            print "Action ",action," valor ",qval
+            print ""
             m = max(m,qval)
             #print"9999999999"
         if len(actions) == 0:
@@ -45,15 +49,20 @@ class AproximateQAgent:
         return m
 
     def update(self,estado,accion,proxState,reward):
-        #print "mmmm", reward
+
 
         sample = reward + self.discount * self.getMaxQValue(proxState)
-        diff = sample - self.getQvalue(estado,accion)
-        #print "diff", diff
+        estimacion = self.getQvalue(estado,accion)
+        diff = sample - estimacion
+        print "Reward", reward
+        print "diff", diff
+        print "Valor sample ",sample
+        print "Valor estimacion ",estimacion
 
         for inde,feat in enumerate(self.juego.getFeatures(estado,accion)):
-            #print "Analizando feature ",inde
             val = self.juego.getFeatures(estado,accion)[inde]
+            print "Valor de refuerzo ",val
+            print ""
             self.weights[inde] = self.weights[inde] + self.alpha*diff*val
 
 

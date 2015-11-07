@@ -24,7 +24,6 @@ class VectorCustom:
         if len(x) != len(y):
             raise Exception("Error vector dimension")
         for inde,val in enumerate(y.vals):
-            print inde,val
             sum += (x[inde] * val)
         return sum
 

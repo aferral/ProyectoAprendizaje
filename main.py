@@ -30,7 +30,8 @@ class Obstacle():
         self.velX = 1
         self.velY = 1
         self.velModulo=math.sqrt(self.velY**2+self.velX**2)
-
+        self.startX = x
+        self.startY = y
         self.x = x
         self.y = y
         self.radio = radio
@@ -64,6 +65,9 @@ class Obstacle():
         self.y += int(self.velY*delta)
         self.lastTime = time
         pass
+    def toStart(self):
+        self.x = self.startX
+        self.y = self.startY
 
     def setDraw(self,screen):
         self.screen = screen
@@ -104,6 +108,7 @@ class JuegoModelo:
         self.dim = (width,heigth)
         self.deltaTime=15/1000.0
 
+        self.ended = False
 
 
         #Setear jugador
@@ -132,8 +137,8 @@ class JuegoModelo:
                 Xaux=obj.x
                 Yaux=obj.y
         #print("aaaaaaa"),accion
-        deltaX= self.deltaTime*playerObj.velModulo*math.cos(accion)
-        deltaY= self.deltaTime*playerObj.velModulo*math.sin(accion)
+        deltaX= self.deltaTime*playerObj.velModulo*math.cos(accion)*2000
+        deltaY= self.deltaTime*playerObj.velModulo*math.sin(accion)*2000
         FuturoX=playerObj.x + deltaX
         FuturoY=playerObj.y + deltaY
 
@@ -168,14 +173,20 @@ class JuegoModelo:
 
         if self.colision(self.playerObj):
             self.endGame()
-            return -100000
+            return -99999
         return 0
-    def endGame(self):
+    def endGame(self): #Me complico resetear el juego simplemente mantendre la transicion plana
+        self.ended = True
         pass
     def doAction(self,action):
+        if self.ended:
+            self.playerObj.toStart()
+            return
         self.playerObj.anguloAct = action
         self.playerObj.velX =self.playerObj.velModulo*math.cos(action)
         self.playerObj.velY =self.playerObj.velModulo*math.sin(action)
+
+        self.lastAction = action
         pass
 
     def observe(self,estadoAnt,estado,accion,recomensa):
@@ -219,7 +230,7 @@ class JuegoModelo:
     def addPlayer(self):
         pass
     def newObstacle(self,x,y):
-        self.listaObstaculos.append(Obstacle(120,x,y))
+        self.listaObstaculos.append(Obstacle(30,x,y))
         pass
     def generateRandomObs(self,n):
 
@@ -240,8 +251,8 @@ class JuegoModelo:
             auxangulo = deltaAngulo+jugador.anguloAct
             #print "Aux angulo ",(deltaAngulo*180/math.pi)%360
            # print "velModulo ",velModulo
-            deltaX= self.deltaTime*jugador.velModulo*math.cos(auxangulo)
-            deltaY= self.deltaTime*jugador.velModulo*math.sin(auxangulo)
+            deltaX= self.deltaTime*jugador.velModulo*math.cos(auxangulo)*2000
+            deltaY= self.deltaTime*jugador.velModulo*math.sin(auxangulo)*2000
             newX=jugador.x + deltaX
             newY=jugador.y + deltaY
            # print "new X y newY ",newX,newY
@@ -334,6 +345,6 @@ class JuegoVisual:
         pygame.quit()
 
 modelo = JuegoModelo()
-modelo.generateRandomObs(2)
+modelo.generateRandomObs(6)
 vista = JuegoVisual(modelo)
 vista.loop()
