@@ -1,3 +1,5 @@
+from CustomVector import VectorCustom
+
 __author__ = 'aferral'
 
 import random
@@ -5,7 +7,8 @@ import math
 class AproximateQAgent:
 
     def __init__(self,juego):
-        self.weights = [10]
+        self.weights = VectorCustom()
+        self.weights.add(10)
         self.juego = juego
         self.discount = 1
         #Parametro de aprendizaje

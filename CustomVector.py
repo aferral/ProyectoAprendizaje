@@ -15,13 +15,16 @@ class VectorCustom:
         return self.vals[int(item)]
     def __repr__(self):
         return str(self.vals)
+    def __setitem__(self, key, value):
+        self.vals[key] = value
     def __mul__(self, y ):
 
         sum = 0
         x = self
         if len(x) != len(y):
             raise Exception("Error vector dimension")
-        for inde,val in enumerate(x.vals):
-            sum += x[int(inde)] * val
+        for inde,val in enumerate(y.vals):
+            print inde,val
+            sum += (x[inde] * val)
         return sum
 
