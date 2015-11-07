@@ -16,6 +16,9 @@ margin = 20
 
 def d(obj1,obj2):
     return math.sqrt(math.pow((obj1.x-obj2.x),2)+math.pow((obj1.y-obj2.y),2))
+def distance(x1,y1,x2,y2):
+    return math.sqrt(math.pow((x1-x2),2)+math.pow((y1-y2),2))
+
 def getAngle(obj1,obj2):
     return math.atan2(obj2.y,obj2.x)-math.atan2(obj1.y,obj1.x)
 
@@ -26,12 +29,14 @@ class Obstacle():
         #Variables modelo
         self.velX = 1
         self.velY = 1
+        self.velModulo=math.sqrt(self.velY**2+self.velX**2)
+
         self.x = x
         self.y = y
         self.radio = radio
         self.player = False
 
-        self.distVision = self.radio * 10
+        self.distVision = self.radio * 600
         self.anguloAct = 0
         self.anguloVision = math.pi / 180.0 * 90
         self.anguloGiro =math.pi / 180.0 *72
@@ -86,7 +91,7 @@ class JuegoModelo:
         self.estadoActual = self.listaObstaculos
         self.estadoAnt = self.listaObstaculos
 
-        self.lastAction = None
+        self.lastAction = 0
         self.lastRew = 0
 
         self.planner = AproximateQAgent(self)
@@ -95,6 +100,7 @@ class JuegoModelo:
         heigth = 600
         self.borders = [margin,width-margin,margin,heigth-margin]
         self.borders1 = [0,width,heigth,0]
+        self.borders2 = [0,width,heigth,0]
         self.dim = (width,heigth)
         self.deltaTime=15/1000.0
 
@@ -102,6 +108,9 @@ class JuegoModelo:
 
         #Setear jugador
         self.playerObj = Obstacle(5,100,100)
+        jugadorradio=self.playerObj.radio
+        self.borders2 = [0+ jugadorradio,width- jugadorradio,heigth- jugadorradio,0+ jugadorradio]
+
         self.playerObj.setPlayer()
 
         self.listaObstaculos.append(self.playerObj)
@@ -113,19 +122,29 @@ class JuegoModelo:
         playerObj = estado[len(estado) - 1]
         dVis = playerObj.distVision
         mindist = dVis
-        print "Distancia vision ",dVis
+        #print "Distancia vision ",dVis
         vec = VectorCustom()
         for obj in self.listaObstaculos:
-            if obj != playerObj and (d(obj,playerObj) < dVis):
+            if obj != playerObj and (d(obj,playerObj) < mindist):
                 #Agregue la funcion para saber el angulo
                 # if (playerObj.estaenvision(obj)):
-                mindist = min(mindist,d(obj,playerObj))
-        vec.add(mindist)
+                mindist = d(obj,playerObj)
+                Xaux=obj.x
+                Yaux=obj.y
+        #print("aaaaaaa"),accion
+        deltaX= self.deltaTime*playerObj.velModulo*math.cos(accion)
+        deltaY= self.deltaTime*playerObj.velModulo*math.sin(accion)
+        FuturoX=playerObj.x + deltaX
+        FuturoY=playerObj.y + deltaY
 
-        return vec
+        superdistance=distance(FuturoX,FuturoY,Xaux,Yaux)
+        #vec.add(mindist)
+        vec.add(superdistance)
 
+        #return vec
+        return superdistance
     def updateGame(self,tiempo):
-        print "El TIEMPO es ",tiempo
+ #       print "El TIEMPO es ",tiempo
         self.estadoAnt = copy.deepcopy(self.listaObstaculos)
 
         #Hago todos lso mov
@@ -149,17 +168,18 @@ class JuegoModelo:
 
         if self.colision(self.playerObj):
             self.endGame()
-            return -9999999999
+            return -100000
         return 0
     def endGame(self):
         pass
     def doAction(self,action):
         self.playerObj.anguloAct = action
-        self.playerObj.velX = math.cos(action)
-        self.playerObj.velY = math.sin(action)
+        self.playerObj.velX =self.playerObj.velModulo*math.cos(action)
+        self.playerObj.velY =self.playerObj.velModulo*math.sin(action)
         pass
 
     def observe(self,estadoAnt,estado,accion,recomensa):
+        #print"vvvv",accion
         self.planner.update(estadoAnt,accion,estado,recomensa)
         pass
 
@@ -170,19 +190,19 @@ class JuegoModelo:
             pared=self.borders1[i]
             margin=pared
             if i == 0 and (pared-(obj.x - obj.radio)) > 0:
-                print "Choque en 0"
+               # print "Choque en 0"
                 obj.x = obj.radio + margin
                 obj.velX *= -1
             if i == 1 and ((obj.x + obj.radio)- pared) > 0:
-                print "Choque en 1"
+               # print "Choque en 1"
                 obj.x = -obj.radio + margin
                 obj.velX *= -1
             if i == 2 and ((obj.y + obj.radio)- pared) > 0:
-                print "Choque en 2"
+              #  print "Choque en 2"
                 obj.y = -obj.radio + margin
                 obj.velY *= -1
             if i == 3 and (pared-(obj.y - obj.radio)) > 0:
-                print "Choque en 3"
+              #  print "Choque en 3"
                 obj.y = obj.radio + margin
                 obj.velY *= -1
         # exit(1)
@@ -192,14 +212,14 @@ class JuegoModelo:
     def colision(self,obj1):
         for obj in self.listaObstaculos:
             if (d(obj1,obj) < (obj1.radio + obj.radio) and obj1 != obj):
-                print "COLLIDE"
+              #  print "COLLIDE"
                 return True
         return False
 
     def addPlayer(self):
         pass
     def newObstacle(self,x,y):
-        self.listaObstaculos.append(Obstacle(30,x,y))
+        self.listaObstaculos.append(Obstacle(120,x,y))
         pass
     def generateRandomObs(self,n):
 
@@ -212,25 +232,23 @@ class JuegoModelo:
     #estooo!!
     def legalActions(self):
         jugador=self.playerObj
-        ponderaciones=[0,-2*math.pi / 180.0,-1*math.pi / 180.0,1*math.pi / 180.0,2*math.pi / 180.0]
+        ponderaciones=[0,-2,-1,1,2]
         acciones=[]
         for index,angulo in enumerate(ponderaciones):
-            print "Sacando de ponderaciones ",angulo
-            auxangulo = angulo*jugador.anguloGiro+jugador.anguloAct
-            print "Aux angulo ",auxangulo
-            velModulo=math.sqrt(jugador.velX**2+jugador.velY**2)
-            print "velModulo ",velModulo
-            deltaX= self.deltaTime*velModulo*math.cos(auxangulo)*1000
-            deltaY= self.deltaTime*velModulo*math.sin(auxangulo)*1000
+           # print "Sacando de ponderaciones ",angulo
+            deltaAngulo=angulo*jugador.anguloGiro
+            auxangulo = deltaAngulo+jugador.anguloAct
+            #print "Aux angulo ",(deltaAngulo*180/math.pi)%360
+           # print "velModulo ",velModulo
+            deltaX= self.deltaTime*jugador.velModulo*math.cos(auxangulo)
+            deltaY= self.deltaTime*jugador.velModulo*math.sin(auxangulo)
             newX=jugador.x + deltaX
             newY=jugador.y + deltaY
-            print "new X y newY ",newX,newY
-            if (newX<self.borders1[1] and newX>self.borders1[0]) and (newY>self.borders1[3] and newY<self.borders1[2]):
+           # print "new X y newY ",newX,newY
+            if (newX<self.borders2[1] and newX>self.borders2[0]) and (newY>self.borders2[3] and newY<self.borders2[2]):
                 # print "Condicion newX<self.borders1[2] ",newX<self.borders1[2]
                 # print "new X y newY ",newX,newY
-
-
-                self.superestados[index]=(newX,newY)
+                self.superestados[index]=((newX,newY))
                 acciones.append(auxangulo)
             else:
                 self.superestados[index]=(None)
@@ -238,6 +256,8 @@ class JuegoModelo:
         if len(acciones) == 0:
             raise Exception("TIRO 0 ACCIONES");
 
+
+        #print("tttttttttt"),acciones
         return acciones
 
 
@@ -297,9 +317,11 @@ class JuegoVisual:
 
             #Elementos auxiliares
             for point in self.juegomodelo.superestados:
+                #print"pppp1",point
                 if point == None:
                     continue
-                print "Punto sigiente ",point
+                #print "Punto sigiente ",point
+                #print"pppp",point
                 pygame.draw.circle(self.screen,(255,0,0),(int(point[0]),int(point[1])),2,1)
 
             self.drawBorde()
