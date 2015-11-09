@@ -11,7 +11,7 @@ class AproximateQAgent:
         self.weights = VectorCustom()
         self.weights.add(0)
         self.juego = juego
-        self.discount = 0.3
+        self.discount = 1
         #Parametro de aprendizaje
         self.alpha = 0.1
 

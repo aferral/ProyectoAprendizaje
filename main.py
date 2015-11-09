@@ -202,6 +202,7 @@ class JuegoModelo:
     def doAction(self,estado,action):
         playerObj = self.getPlayer(estado)
 
+
         deltaX= self.deltaTime*playerObj.velModulo*math.cos(action)*2000
         deltaY= self.deltaTime*playerObj.velModulo*math.sin(action)*2000
         FuturoX=playerObj.x + deltaX
