@@ -6,6 +6,10 @@ __author__ = 'aferral'
 
 import itertools
 
+#Todo Separar el fin de juego del juego, si se acaba el juego tirar el main dneuvo (guardando weights(
+
+#
+
 __author__ = 'aferral'
 import pygame, random
 import math
@@ -13,6 +17,10 @@ from random import randint
 # Define some colors
 WHITE = (255, 255, 255)
 margin = 20
+fps = 40
+
+
+constTime = fps/1000.0
 
 def d(obj1,obj2):
     return math.sqrt(math.pow((obj1.x-obj2.x),2)+math.pow((obj1.y-obj2.y),2))
@@ -22,6 +30,13 @@ def distance(x1,y1,x2,y2):
 def getAngle(obj1,obj2):
     return math.atan2(obj2.y,obj2.x)-math.atan2(obj1.y,obj1.x)
 
+#TODO hacer que la distancia de proyeccion sea generica respecto a cambios de tiempo y board dims
+def actionToPoint(obj,action):
+    deltaX= constTime*obj.velModulo*math.cos(action)*1200
+    deltaY= constTime*obj.velModulo*math.sin(action)*1200
+    FuturoX=obj.x + deltaX
+    FuturoY=obj.y + deltaY
+    return (FuturoX,FuturoY)
 
 class Obstacle():
 
@@ -52,18 +67,23 @@ class Obstacle():
     def setPlayer(self):
         self.player = True
         self.color = (255,0,0)
+        self.radio = 5
         self.distVision = self.radio + 10
         self.velX *= 2
         self.velY *= 2
+    def teleport(self,point):
+        self.x = point[0]
+        self.y = point[1]
+
     def changeSpeed(self,velTuple):
         self.velX = velTuple[0]
         self.velY = velTuple[1]
 
     def update(self,time):
         delta = time
-        self.x += int(self.velX*delta)
-        self.y += int(self.velY*delta)
-        self.lastTime = time
+        self.x += self.velX*self.lastTime
+        self.y += self.velY*self.lastTime
+        self.lastTime += delta
         pass
     def toStart(self):
         self.x = self.startX
@@ -100,16 +120,14 @@ class JuegoModelo:
 
         self.planner = AproximateQAgent(self)
 
-        width = 200
-        heigth = 500
+        width = 800
+        heigth = 600
         self.borders = [margin,width-margin,margin,heigth-margin]
         self.borders1 = [0,width,heigth,0]
         self.borders2 = [0,width,heigth,0]
         self.dim = (width,heigth)
-        self.deltaTime=15/1000.0
 
         self.ended = False
-
 
         #Setear jugador
         playerObj = Obstacle(30,100,100)
@@ -120,40 +138,26 @@ class JuegoModelo:
 
         self.listaObstaculos.append(playerObj)
         self.superestados=[0,0,0,0,0]
-
-
         pass
+
     def getPlayer(self,estado):
         return estado[0]
 
     def getFeatures(self,estado,accion):
         playerObj = self.getPlayer(estado)
-        dVis = playerObj.distVision
-        mindist = dVis
-        #print "Distancia vision ",dVis
+        mindist = 9999
         vec = VectorCustom()
 
-        #Caso base no hay obstaculos la distancia a enemigo es la distancia de visualizacion (no ve nada)
-        distNextStep = dVis
-
-        deltaX= self.deltaTime*playerObj.velModulo*math.cos(accion)*2000
-        deltaY= self.deltaTime*playerObj.velModulo*math.sin(accion)*2000
-        FuturoX=playerObj.x + deltaX
-        FuturoY=playerObj.y + deltaY
-
-        # and (d(obj,playerObj) < mindist)
+        (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
 
         for obj in estado:
             if obj != playerObj :
-                #Agregue la funcion para saber el angulo
-                # if (playerObj.estaenvision(obj)):
-                mindist = d(obj,playerObj)
                 Xaux=obj.x
                 Yaux=obj.y
-                distNextStep=distance(FuturoX,FuturoY,Xaux,Yaux)
-
+                distNextStep=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
         #vec.add(mindist)
-        vec.add(distNextStep)
+        vec.add(1/(distNextStep))
+        vec.add(1)
         return vec
 
     def updateGame(self,tiempo):
@@ -176,10 +180,6 @@ class JuegoModelo:
             return
 
 
-        # print "Valor posicion objx ACT",self.estadoActual[1].x,self.estadoActual[1].y
-        # print "Valor posicion objx ANT",self.estadoAnt[1].x,self.estadoAnt[1].y
-
-        assert ((self.estadoActual[0].x,self.estadoActual[1].y) !=(self.estadoAnt[1].x,self.estadoAnt[1].y) )
 	
         #Es el reward?
         reward = self.calculateReward(self.estadoActual)
@@ -194,24 +194,17 @@ class JuegoModelo:
         if self.colision(playerObj):
             print "COLLISION DETECTADA"
             self.endGame()
-            return -10
-        return +1
+            return -1000
+        return 1
     def endGame(self): #Me complico resetear el juego simplemente mantendre la transicion plana
         self.ended = True
         pass
     def doAction(self,estado,action):
         playerObj = self.getPlayer(estado)
 
+        playerObj.changeSpeed((playerObj.velModulo*math.cos(action),playerObj.velModulo*math.sin(action)))
+        # playerObj.teleport(actionToPoint(playerObj,action))
 
-        deltaX= self.deltaTime*playerObj.velModulo*math.cos(action)*2000
-        deltaY= self.deltaTime*playerObj.velModulo*math.sin(action)*2000
-        FuturoX=playerObj.x + deltaX
-        FuturoY=playerObj.y + deltaY
-
-        # playerObj.anguloAct = action
-        #
-        # playerObj.velX =playerObj.velModulo*math.cos(action)
-        # playerObj.velY =playerObj.velModulo*math.sin(action)
 
         self.lastAction = action
         pass
@@ -273,19 +266,12 @@ class JuegoModelo:
         ponderaciones=[0,-2,-1,1,2]
         acciones=[]
         for index,angulo in enumerate(ponderaciones):
-           # print "Sacando de ponderaciones ",angulo
             deltaAngulo=angulo*jugador.anguloGiro
             auxangulo = deltaAngulo+jugador.anguloAct
-            #print "Aux angulo ",(deltaAngulo*180/math.pi)%360
-           # print "velModulo ",velModulo
-            deltaX= self.deltaTime*jugador.velModulo*math.cos(auxangulo)*2000
-            deltaY= self.deltaTime*jugador.velModulo*math.sin(auxangulo)*2000
-            newX=jugador.x + deltaX
-            newY=jugador.y + deltaY
-           # print "new X y newY ",newX,newY
+
+            (newX,newY)= actionToPoint(jugador,auxangulo)
+
             if (newX<self.borders2[1] and newX>self.borders2[0]) and (newY>self.borders2[3] and newY<self.borders2[2]):
-                # print "Condicion newX<self.borders1[2] ",newX<self.borders1[2]
-                # print "new X y newY ",newX,newY
                 self.superestados[index]=((newX,newY))
                 acciones.append(auxangulo)
             else:
@@ -311,7 +297,6 @@ class JuegoVisual:
         for elem in self.juegomodelo.listaObstaculos:
             elem.setDraw(self.screen)
         self.clock = pygame.time.Clock()
-        self.deltaTime = 0.0
 
     def drawBorde(self):
         bordes = self.juegomodelo.borders
@@ -327,7 +312,7 @@ class JuegoVisual:
 
 
     def loop(self):
-        vel = 0.1
+
         while not self.done:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -348,8 +333,7 @@ class JuegoVisual:
             # Clear the screen
             self.screen.fill(WHITE)
             listaObjetos = self.juegomodelo.listaObstaculos
-
-            self.juegomodelo.updateGame(self.deltaTime)
+            self.juegomodelo.updateGame(constTime)
             for elem in listaObjetos:
                 elem.draw()
 
@@ -364,7 +348,7 @@ class JuegoVisual:
 
             self.drawBorde()
             # Limit to 60 frames per second
-            self.deltaTime = self.clock.tick(3) * vel
+            self.clock.tick(fps)
 
             # Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
@@ -372,6 +356,6 @@ class JuegoVisual:
         pygame.quit()
 
 modelo = JuegoModelo()
-modelo.generateRandomObs(1)
+modelo.generateRandomObs(10)
 vista = JuegoVisual(modelo)
 vista.loop()

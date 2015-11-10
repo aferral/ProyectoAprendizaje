@@ -10,10 +10,11 @@ class AproximateQAgent:
     def __init__(self,juego):
         self.weights = VectorCustom()
         self.weights.add(0)
+        self.weights.add(0)
         self.juego = juego
-        self.discount = 1
+        self.discount = 0.8
         #Parametro de aprendizaje
-        self.alpha = 0.1
+        self.alpha = 1
 
         #Parametro de exploracion
         self.epsilon =0
@@ -23,13 +24,13 @@ class AproximateQAgent:
 
 
     def getQvalue(self,estado,accion):
-        # print "El feature es ",self.juego.getFeatures(estado,accion)
-        # print "Los pesos son ",self.weights
-        # print "El resultado es ",self.juego.getFeatures(estado,accion)*self.weights
-        #print "lllllllllllllllllllllllllllll",accion
-        print "Weight",self.weights," valFeature ",self.juego.getFeatures(estado,accion)," res ",self.juego.getFeatures(estado,accion)*self.weights
-        # print ""
-        # print("uuuuu"),self.juego.getFeatures(estado,accion)*self.weights
+
+        print "Action ",accion
+        print "Weight",self.weights
+        print "ValFeature ",self.juego.getFeatures(estado,accion)
+        print "Res",self.juego.getFeatures(estado,accion)*self.weights
+        print "//////////////////////////////////////////////////"
+
         return self.juego.getFeatures(estado,accion)*self.weights
 
     def getMaxQValue(self,estado):
@@ -97,6 +98,4 @@ class AproximateQAgent:
                 m = (qval,action)
         if len(actions) == 0:
             return 0
-
-        #print("DAAAAAAAAAAAAAAAA"),m
         return m[1]
