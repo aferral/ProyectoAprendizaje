@@ -9,8 +9,7 @@ class AproximateQAgent:
 
     def __init__(self,juego):
         self.weights = VectorCustom()
-        self.weights.add(0)
-        self.weights.add(0)
+
         self.juego = juego
         self.discount = 0.8
         #Parametro de aprendizaje
@@ -25,28 +24,24 @@ class AproximateQAgent:
 
     def getQvalue(self,estado,accion):
 
-        print "Action ",accion
-        print "Weight",self.weights
-        print "ValFeature ",self.juego.getFeatures(estado,accion)
-        print "Res",self.juego.getFeatures(estado,accion)*self.weights
-        print "//////////////////////////////////////////////////"
+        # print "Action ",accion
+        # print "Weight",self.weights
+        # print "ValFeature ",self.juego.getFeatures(estado,accion)
+        # print "Res",self.juego.getFeatures(estado,accion)*self.weights
+        # print "//////////////////////////////////////////////////"
 
         return self.juego.getFeatures(estado,accion)*self.weights
 
     def getMaxQValue(self,estado):
         actions = self.juego.legalActions(estado)
         m = -sys.maxint
-        #print("uuuuuuuu"),actions
         for action in actions:
             qval = self.getQvalue(estado,action)
-            print "Action ",action," valor ",qval
+            # print "Action ",action," valor ",qval
 
             m = max(m,qval)
-        print ""
         if len(actions) == 0:
-            print("RETORNANDO VAL DEFAULT")
             return 0
-        print "Retornando ",m
         return m
 
     #SARSA
@@ -58,21 +53,21 @@ class AproximateQAgent:
         diff = sample - estimacion
         valFeature = self.juego.getFeatures(estado,accion)
 
-        print " "
-        print "------------------En funcion update -----------------------"
-        print "Reward", reward
-        print "diff", diff
-        print "Valor sample ",sample
-        print "Valor estimacion ",estimacion
-        print "Valor feature en estado ",valFeature
+        # print " "
+        # print "------------------En funcion update -----------------------"
+        # print "Reward", reward
+        # print "diff", diff
+        # print "Valor sample ",sample
+        # print "Valor estimacion ",estimacion
+        # print "Valor feature en estado ",valFeature
 
         for inde,feat in enumerate(valFeature):
             val = valFeature[inde]
-            print "Valor de refuerzo ",val
-            print ""
+            # print "Valor de refuerzo ",val
+            # print ""
             self.weights[inde] = self.weights[inde] + self.alpha*diff*val
-        print "------------------saliendo update -----------------------"
-        print " "
+        # print "------------------saliendo update -----------------------"
+        # print " "
 
     def getBestAction(self,estado):
         #falta la variable estado

@@ -7,8 +7,16 @@ __author__ = 'aferral'
 import itertools
 
 #Todo Separar el fin de juego del juego, si se acaba el juego tirar el main dneuvo (guardando weights(
+#Todo el comportamiento en los bordes genera rebotes indeseados
+#Todo Hay que cambiar a que decida maxima distancia DENTRO DE BORDES sino intenta ir hacia afuera(rebota)
+#Hay que decirle que el borde es malo
 
-#
+#TODO hacer que la distancia de proyeccion sea generica respecto a cambios de tiempo y board dims
+#Todo revisar como afecta el cambio de fps al movimiento y calculo de puntos
+
+#Todo formalizar la cosa de las features nose hacer una clase o algo, ademas de una buena forma de
+#Inicializar vectores peso
+
 
 __author__ = 'aferral'
 import pygame, random
@@ -17,7 +25,7 @@ from random import randint
 # Define some colors
 WHITE = (255, 255, 255)
 margin = 20
-fps = 40
+fps = 30
 
 
 constTime = fps/1000.0
@@ -30,10 +38,9 @@ def distance(x1,y1,x2,y2):
 def getAngle(obj1,obj2):
     return math.atan2(obj2.y,obj2.x)-math.atan2(obj1.y,obj1.x)
 
-#TODO hacer que la distancia de proyeccion sea generica respecto a cambios de tiempo y board dims
 def actionToPoint(obj,action):
-    deltaX= constTime*obj.velModulo*math.cos(action)*1200
-    deltaY= constTime*obj.velModulo*math.sin(action)*1200
+    deltaX= constTime*obj.velModulo*math.cos(action)*500
+    deltaY= constTime*obj.velModulo*math.sin(action)*500
     FuturoX=obj.x + deltaX
     FuturoY=obj.y + deltaY
     return (FuturoX,FuturoY)
@@ -42,9 +49,9 @@ class Obstacle():
 
     def __init__(self,radio,x,y):
         #Variables modelo
-        self.velX = 1
-        self.velY = 1
-        self.velModulo=math.sqrt(self.velY**2+self.velX**2)
+        self.velX = 2
+        self.velY = 2
+        self.velModulo=5
         self.startX = x
         self.startY = y
         self.x = x
@@ -69,8 +76,7 @@ class Obstacle():
         self.color = (255,0,0)
         self.radio = 5
         self.distVision = self.radio + 10
-        self.velX *= 2
-        self.velY *= 2
+
     def teleport(self,point):
         self.x = point[0]
         self.y = point[1]
@@ -81,8 +87,8 @@ class Obstacle():
 
     def update(self,time):
         delta = time
-        self.x += self.velX*self.lastTime
-        self.y += self.velY*self.lastTime
+        self.x += (self.velX*delta*200)
+        self.y += (self.velY*delta*200)
         self.lastTime += delta
         pass
     def toStart(self):
@@ -110,6 +116,8 @@ class Obstacle():
 
 class JuegoModelo:
     def __init__(self):
+        self.countDeath = 0
+
         self.listaObstaculos = []
 
         self.estadoActual = self.listaObstaculos
@@ -120,13 +128,22 @@ class JuegoModelo:
 
         self.planner = AproximateQAgent(self)
 
-        width = 800
-        heigth = 600
+        #Cosas de bordes
+        width = 400
+        heigth = 500
         self.borders = [margin,width-margin,margin,heigth-margin]
         self.borders1 = [0,width,heigth,0]
         self.borders2 = [0,width,heigth,0]
         self.dim = (width,heigth)
 
+        self.p1 = (self.borders[0],self.borders[2])
+        self.p2 = (self.borders[0],self.borders[3])
+        self.p3 = (self.borders[1],self.borders[3])
+        self.p4 = (self.borders[1],self.borders[2])
+
+
+        self.featFun = None
+        self.setJustDistFeature()
         self.ended = False
 
         #Setear jugador
@@ -138,16 +155,41 @@ class JuegoModelo:
 
         self.listaObstaculos.append(playerObj)
         self.superestados=[0,0,0,0,0]
+
+
+
         pass
+
+    def setFeatureFun(self,function):
+        self.featFun = function
+
+    def setJustDistFeature(self):
+
+        protoWeight = VectorCustom()
+        protoWeight.add(0)
+        protoWeight.add(0)
+
+        self.planner.weights = protoWeight
+        self.setFeatureFun(self.justDistFeature)
+
+    def setBorderAndDistFeature(self):
+        protoWeight = VectorCustom()
+        protoWeight.add(0)
+        protoWeight.add(0)
+        protoWeight.add(0)
+
+        self.planner.weights = protoWeight
+        self.setFeatureFun(self.bordAndDistFeature)
 
     def getPlayer(self,estado):
         return estado[0]
 
-    def getFeatures(self,estado,accion):
+
+    def justDistFeature(self,estado,accion):
         playerObj = self.getPlayer(estado)
         mindist = 9999
         vec = VectorCustom()
-
+        distNextStep = mindist
         (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
 
         for obj in estado:
@@ -155,10 +197,60 @@ class JuegoModelo:
                 Xaux=obj.x
                 Yaux=obj.y
                 distNextStep=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
-        #vec.add(mindist)
-        vec.add(1/(distNextStep))
+
+        vec.add(10/(distNextStep))
         vec.add(1)
         return vec
+
+    def bordAndDistFeature(self,estado,accion):
+        playerObj = self.getPlayer(estado)
+        mindist = 9999
+        vec = VectorCustom()
+        distNextStep = mindist
+        (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
+
+        for obj in estado:
+            if obj != playerObj :
+                Xaux=obj.x
+                Yaux=obj.y
+                distNextStep=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
+
+
+        #Tambien calcula la distancia al board mas cercano
+        #Calcula distncias a lines que representar bordes
+        #p1-----------------------------p2
+        #-                              -
+        #-                              -
+        #-                              -
+        #-                              -
+        #-                              -
+        #p4-----------------------------p3
+
+
+        distC1 = distance(FuturoX,FuturoY,self.p1[0],FuturoY)
+        distC2 = distance(FuturoX,FuturoY,FuturoX,self.p1[1])
+        distC3 = distance(FuturoX,FuturoY,self.p3[0],FuturoY)
+        distC4 = distance(FuturoX,FuturoY,FuturoX,self.p3[1])
+
+        # print "Cordinates ",(FuturoX,FuturoY)
+        # print "p1 - p3 ",self.p1," ",self.p3
+        # print "Distancia bordes "
+        # print "DistC1 ",distC1
+        # print "DistC2 ",distC2
+        # print "DistC3 ",distC3
+        # print "DistC4 ",distC4
+
+        minBor = min(distC1,distC2,distC3,distC4)
+        # print "Distancia a Borde mas cercano ",minBor
+
+        vec.add(1/(minBor+0.1))
+        vec.add(10/(distNextStep))
+        vec.add(1)
+        return vec
+
+    def getFeatures(self,estado,accion):
+        return self.featFun(estado,accion)
+
 
     def updateGame(self,tiempo):
         self.estadoAnt = copy.deepcopy(self.listaObstaculos)
@@ -174,6 +266,9 @@ class JuegoModelo:
         self.estadoActual = self.listaObstaculos
 
         if self.ended:
+            self.countDeath += 1
+            print "!!!!!!!!!!!!!!! Me mori !!!!!!!!!!!   ",self.countDeath
+
             self.ended = False
             playerObj = self.getPlayer(self.estadoActual)
             playerObj.toStart()
@@ -284,7 +379,7 @@ class JuegoModelo:
         #print("tttttttttt"),acciones
         return acciones
 
-
+from pygame.locals import *
 class JuegoVisual:
     def __init__(self,juegomodelo):
         self.done = False
@@ -292,22 +387,17 @@ class JuegoVisual:
 
         pygame.init()
         self.screen = pygame.display.set_mode(
-            [self.juegomodelo.dim[0], self.juegomodelo.dim[1]])
+            [self.juegomodelo.dim[0], self.juegomodelo.dim[1]],HWSURFACE|DOUBLEBUF|RESIZABLE)
 
         for elem in self.juegomodelo.listaObstaculos:
             elem.setDraw(self.screen)
         self.clock = pygame.time.Clock()
 
     def drawBorde(self):
-        bordes = self.juegomodelo.borders
-        p1 = (bordes[0],bordes[2])
-        p2 = (bordes[0],bordes[3])
-        p3 = (bordes[1],bordes[3])
-        p4 = (bordes[1],bordes[2])
-        pygame.draw.line(self.screen, (0,255,0), p1, p2)
-        pygame.draw.line(self.screen, (0,255,0), p2, p3)
-        pygame.draw.line(self.screen, (0,255,0), p3, p4)
-        pygame.draw.line(self.screen, (0,255,0), p4, p1)
+        pygame.draw.line(self.screen, (0,255,0), self.juegomodelo.p1, self.juegomodelo.p2)
+        pygame.draw.line(self.screen, (0,255,0), self.juegomodelo.p2, self.juegomodelo.p3)
+        pygame.draw.line(self.screen, (0,255,0), self.juegomodelo.p3, self.juegomodelo.p4)
+        pygame.draw.line(self.screen, (0,255,0), self.juegomodelo.p4, self.juegomodelo.p1)
         pass
 
 
@@ -320,16 +410,19 @@ class JuegoVisual:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
                         print "Izq"
-                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((1,0))
+                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((-1,0))
+
                     if event.key == pygame.K_RIGHT:
                         print "Derecha"
-                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((-1,0))
+                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((1,0))
                     if event.key == pygame.K_UP:
                         print "Arriba"
-                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((0,1))
+                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((0,-1))
                     if event.key == pygame.K_DOWN:
                         print "Down"
-                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((0,-1))
+                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((0,1))
+
+                        pygame.display.flip()
             # Clear the screen
             self.screen.fill(WHITE)
             listaObjetos = self.juegomodelo.listaObstaculos
@@ -354,8 +447,20 @@ class JuegoVisual:
             pygame.display.flip()
 
         pygame.quit()
+import sys
+
+if len(sys.argv)  == 1 :
+    arg1 = 1 #Esto quiere decir coloca solo una pelota en juego
+    arg2 = 0 #0 quiere decir que utiliza feature de distancia solamente 1 utiliza feature con border,dist
+else:
+   arg1 = int(sys.argv[1]) #Esto quiere decir coloca solo una pelota en juego
+   arg2 = int(sys.argv[2]) #Esto quiere decir que utiliza feature de distancia solamente
 
 modelo = JuegoModelo()
-modelo.generateRandomObs(10)
+modelo.generateRandomObs(arg1)
+if arg2:
+    print "Colocando FEATURE BORDER AND DIST"
+    modelo.setBorderAndDistFeature()
+
 vista = JuegoVisual(modelo)
 vista.loop()
