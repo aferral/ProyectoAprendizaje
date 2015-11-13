@@ -385,6 +385,10 @@ class JuegoModelo:
 from pygame.locals import *
 class JuegoVisual:
     def __init__(self,juegomodelo):
+
+        #Variable prueba
+        self.modoStep = False
+
         self.done = False
         self.juegomodelo = juegomodelo
 
@@ -405,8 +409,11 @@ class JuegoVisual:
 
 
     def loop(self):
+
         while not self.done:
-            raw_input()
+
+            if self.modoStep:
+                raw_input()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.done = True
@@ -451,6 +458,16 @@ class JuegoVisual:
 
         pygame.quit()
 import sys
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("N Enemies", type=int,help="Cuantos meteoros colocar", default=1)
+parser.add_argument("Feature ",help="0 feature dist, 1 featuresDistBorder", default=1)
+
+args = parser.parse_args()
+answer = args.square**2
+
 
 if len(sys.argv)  == 1 :
     arg1 = 1 #Esto quiere decir coloca solo una pelota en juego
@@ -464,6 +481,6 @@ modelo.generateRandomObs(arg1)
 if arg2:
     print "Colocando FEATURE BORDER AND DIST"
     modelo.setBorderAndDistFeature()
-modelo.setJustDistFeature()
+modelo.setBorderAndDistFeature()
 vista = JuegoVisual(modelo)
 vista.loop()
