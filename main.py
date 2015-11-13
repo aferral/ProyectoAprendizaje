@@ -1,11 +1,9 @@
 from Model import JuegoModelo
-from QlearningAgent import AproximateQAgent
-
-from CustomVector import VectorCustom
-import math
+import sys
+import argparse
+import pygame
 __author__ = 'aferral'
 
-import itertools
 
 #Generar modo debug con grideo
 
@@ -18,18 +16,11 @@ import itertools
 #Todo formalizar la cosa de las features nose hacer una clase o algo, ademas de una buena forma de
 #Inicializar vectores peso
 
-
-__author__ = 'aferral'
-import pygame, random
-import math
-from random import randint
 # Define some colors
 WHITE = (255, 255, 255)
 
 fps = 20
 constTime = 20/1000.0
-
-
 
 
 from pygame.locals import *
@@ -107,8 +98,6 @@ class JuegoVisual:
             pygame.display.flip()
 
         pygame.quit()
-import sys
-import argparse
 
 
 parser = argparse.ArgumentParser()
@@ -116,6 +105,7 @@ parser.add_argument(dest="nEnemies", type=int,help="Cuantos meteoros colocar", d
 parser.add_argument(dest='feature',help="0 feature dist, 1 featuresDistBorder", default=1, nargs='?')
 parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=20, nargs='?')
 
+parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
 args = parser.parse_args()
 
 
@@ -124,5 +114,7 @@ modelo.generateRandomObs(args.nEnemies)
 modelo.generateRandomFoods(args.Food)
 if args.feature:
     modelo.setBorderAndDistFeature()
+if args.training:
+    modelo.trainModel(constTime,100)
 vista = JuegoVisual(modelo)
 vista.loop()
