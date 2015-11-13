@@ -249,12 +249,12 @@ class JuegoModelo:
         vec.add(1)
         return vec
 
-    def recompenzas(self, estado,accion):
+#    def recompenzas(self, estado,accion):
 
 
 
-    def getFeatures(self,estado,accion):
-        return self.featFun(estado,accion)
+ #    def getFeatures(self,estado,accion):
+ #       return self.featFun(estado,accion)
 
 
     def updateGame(self,tiempo):
