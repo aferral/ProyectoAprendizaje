@@ -39,6 +39,10 @@ class Obstacle():
         self.y = y
         self.radio = radio
         self.player = False
+        self.isComida = False
+
+
+
 
         self.distVision = self.radio * 600
         self.anguloAct = 0
@@ -177,7 +181,7 @@ class JuegoModelo:
         (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
 
         for obj in estado:
-            if obj != playerObj :
+            if obj != playerObj and obj.isComida == False:
                 Xaux=obj.x
                 Yaux=obj.y
                 mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
@@ -194,7 +198,7 @@ class JuegoModelo:
         (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
 
         for obj in estado:
-            if obj != playerObj :
+            if obj != playerObj and obj.isComida == False:
                 Xaux=obj.x
                 Yaux=obj.y
                 mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
@@ -232,6 +236,18 @@ class JuegoModelo:
         vec.add(1)
         return vec
 
+    def comiditas(self, estado,accion):
+        vec = self.bordAndDistFeature(estado,accion)
+        playerObj = self.getPlayer(estado)
+        mindist = 9999
+        (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
+
+        for obj in estado:
+            if obj != playerObj and obj.isComida:
+                Xaux=obj.x
+                Yaux=obj.y
+                mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
+        vec.add(1/(mindist))
     def getFeatures(self,estado,accion):
         return self.featFun(estado,accion)
 
@@ -269,13 +285,22 @@ class JuegoModelo:
         #Aca va el observe
         self.doAction(self.estadoActual,self.planner.getBestAction(self.estadoActual))
         pass
-
     def calculateReward(self,estado):
+        acumulative=0
         playerObj = self.getPlayer(estado)
-        if self.colision(playerObj):
-            print "COLLISION DETECTADA"
-            self.endGame()
-            return -1000
+        listaColisiones = self.colision(playerObj)
+
+        if len(listaColisiones)>0:
+            for obj in listaColisiones:
+                if obj.isComida:
+                    print "Comio una comidita"
+                    self.listaObstaculos.remove(obj)
+                    acumulative += 100
+                else:
+                    print "COLLISION DETECTADA"
+                    self.endGame()
+                    acumulative += -1000
+            return acumulative
         return 1
     def endGame(self): #Me complico resetear el juego simplemente mantendre la transicion plana
         self.ended = True
@@ -322,17 +347,27 @@ class JuegoModelo:
         pass
 
     def colision(self,obj1):
+        lista = []
         for obj in self.listaObstaculos:
             if (d(obj1,obj) < (obj1.radio + obj.radio) and obj1 != obj):
               #  print "COLLIDE"
-                return True
-        return False
+                lista.append(obj)
+        return lista
 
     def addPlayer(self):
         pass
     def newObstacle(self,x,y):
-        self.listaObstaculos.append(Obstacle(30,x,y))
+        obstacle=Obstacle(30,x,y)
+        self.listaObstaculos.append(obstacle)
         pass
+    def newFood(self,x,y):
+        food=Obstacle(7,x,y)
+        food.color=(0,255,0)
+        food.velX = 0
+        food.velY = 0
+        food.changeSpeed((0,0))
+        food.isComida=True
+        self.listaObstaculos.append(food)
     def generateRandomObs(self,n):
 
         for i in range(n):
@@ -342,6 +377,13 @@ class JuegoModelo:
 
         pass
     #estooo!!
+    def generateRandomFoods(self, m):
+        for i in range(m):
+            xcord = randint(self.borders[0],self.borders[1])
+            ycord = randint(self.borders[2],self.borders[3])
+            self.newFood(xcord,ycord)
+
+        pass
     def legalActions(self,estado):
         jugador= self.getPlayer(estado)
         ponderaciones=self.CalcularPonderacion()
