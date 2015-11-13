@@ -39,8 +39,8 @@ def getAngle(obj1,obj2):
     return math.atan2(obj2.y,obj2.x)-math.atan2(obj1.y,obj1.x)
 
 def actionToPoint(obj,action):
-    deltaX= obj.velModulo*math.cos(action)*5
-    deltaY= obj.velModulo*math.sin(action)*5
+    deltaX= obj.velModulo*math.cos(action)*4
+    deltaY= obj.velModulo*math.sin(action)*4
     FuturoX=obj.x + deltaX
     FuturoY=obj.y + deltaY
     return (FuturoX,FuturoY)
@@ -406,7 +406,7 @@ class JuegoVisual:
 
     def loop(self):
         while not self.done:
-            raw_input()
+            #raw_input()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.done = True
