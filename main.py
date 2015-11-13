@@ -26,7 +26,7 @@ from random import randint
 WHITE = (255, 255, 255)
 margin = 20
 fps = 30
-
+NumAccion=10
 
 constTime = fps/1000.0
 
@@ -39,8 +39,8 @@ def getAngle(obj1,obj2):
     return math.atan2(obj2.y,obj2.x)-math.atan2(obj1.y,obj1.x)
 
 def actionToPoint(obj,action):
-    deltaX= constTime*obj.velModulo*math.cos(action)*50
-    deltaY= constTime*obj.velModulo*math.sin(action)*50
+    deltaX= constTime*obj.velModulo*math.cos(action)*500
+    deltaY= constTime*obj.velModulo*math.sin(action)*500
     FuturoX=obj.x + deltaX
     FuturoY=obj.y + deltaY
     return (FuturoX,FuturoY)
@@ -62,7 +62,7 @@ class Obstacle():
         self.distVision = self.radio * 600
         self.anguloAct = 0
         self.anguloVision = math.pi / 180.0 * 90
-        self.anguloGiro =math.pi / 180.0 *72
+        self.anguloGiro =math.pi / 180.0 *360/NumAccion
 
 
         self.lastTime = 0
@@ -154,7 +154,7 @@ class JuegoModelo:
         playerObj.setPlayer()
 
         self.listaObstaculos.append(playerObj)
-        self.superestados=[0,0,0,0,0]
+        self.superestados=[0 for i in range(NumAccion)]
 
 
 
@@ -281,7 +281,7 @@ class JuegoModelo:
         self.observe(self.estadoAnt,self.estadoActual,self.lastAction,reward)
 
         #Aca va el observe
-        # self.doAction(self.estadoActual,self.planner.getBestAction(self.estadoActual))
+        self.doAction(self.estadoActual,self.planner.getBestAction(self.estadoActual))
         pass
 
     def calculateReward(self,estado):
@@ -358,7 +358,7 @@ class JuegoModelo:
     #estooo!!
     def legalActions(self,estado):
         jugador= self.getPlayer(estado)
-        ponderaciones=[0,-2,-1,1,2]
+        ponderaciones=self.CalcularPonderacion()
         acciones=[]
         for index,angulo in enumerate(ponderaciones):
             deltaAngulo=angulo*jugador.anguloGiro
@@ -378,6 +378,9 @@ class JuegoModelo:
 
         #print("tttttttttt"),acciones
         return acciones
+    def CalcularPonderacion(self):
+        return range(NumAccion)
+
 
 from pygame.locals import *
 class JuegoVisual:
@@ -411,18 +414,17 @@ class JuegoVisual:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
                         print "Izq"
-                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((-1,0))
+                        self.juegomodelo.listaObstaculos[1].changeSpeed((-1,0))
 
                     if event.key == pygame.K_RIGHT:
                         print "Derecha"
-
-                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((1,0))
+                        self.juegomodelo.listaObstaculos[1].changeSpeed((1,0))
                     if event.key == pygame.K_UP:
                         print "Arriba"
-                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((0,-1))
+                        self.juegomodelo.listaObstaculos[1].changeSpeed((0,-1))
                     if event.key == pygame.K_DOWN:
                         print "Down"
-                        self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((0,1))
+                        self.juegomodelo.listaObstaculos[1].changeSpeed((0,1))
 
                         pygame.display.flip()
             # Clear the screen
@@ -463,6 +465,6 @@ modelo.generateRandomObs(arg1)
 if arg2:
     print "Colocando FEATURE BORDER AND DIST"
     modelo.setBorderAndDistFeature()
-
+modelo.setBorderAndDistFeature()
 vista = JuegoVisual(modelo)
 vista.loop()
