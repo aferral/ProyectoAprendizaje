@@ -39,8 +39,8 @@ def getAngle(obj1,obj2):
     return math.atan2(obj2.y,obj2.x)-math.atan2(obj1.y,obj1.x)
 
 def actionToPoint(obj,action):
-    deltaX= constTime*obj.velModulo*math.cos(action)*500
-    deltaY= constTime*obj.velModulo*math.sin(action)*500
+    deltaX= constTime*obj.velModulo*math.cos(action)*50
+    deltaY= constTime*obj.velModulo*math.sin(action)*50
     FuturoX=obj.x + deltaX
     FuturoY=obj.y + deltaY
     return (FuturoX,FuturoY)
@@ -281,7 +281,7 @@ class JuegoModelo:
         self.observe(self.estadoAnt,self.estadoActual,self.lastAction,reward)
 
         #Aca va el observe
-        self.doAction(self.estadoActual,self.planner.getBestAction(self.estadoActual))
+        # self.doAction(self.estadoActual,self.planner.getBestAction(self.estadoActual))
         pass
 
     def calculateReward(self,estado):
@@ -404,6 +404,7 @@ class JuegoVisual:
     def loop(self):
 
         while not self.done:
+            # raw_input()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.done = True
@@ -414,6 +415,7 @@ class JuegoVisual:
 
                     if event.key == pygame.K_RIGHT:
                         print "Derecha"
+
                         self.juegomodelo.getPlayer(self.juegomodelo.estadoActual).changeSpeed((1,0))
                     if event.key == pygame.K_UP:
                         print "Arriba"

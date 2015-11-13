@@ -24,11 +24,11 @@ class AproximateQAgent:
 
     def getQvalue(self,estado,accion):
 
-        # print "Action ",accion
-        # print "Weight",self.weights
-        # print "ValFeature ",self.juego.getFeatures(estado,accion)
-        # print "Res",self.juego.getFeatures(estado,accion)*self.weights
-        # print "//////////////////////////////////////////////////"
+        print "Action ",accion
+        print "Weight",self.weights
+        print "ValFeature ",self.juego.getFeatures(estado,accion)
+        print "Res",self.juego.getFeatures(estado,accion)*self.weights
+        print "//////////////////////////////////////////////////"
 
         return self.juego.getFeatures(estado,accion)*self.weights
 
