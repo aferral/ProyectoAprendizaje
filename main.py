@@ -108,7 +108,7 @@ parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", defau
 parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
 args = parser.parse_args()
 
-
+#bla
 modelo = JuegoModelo()
 modelo.generateRandomObs(args.nEnemies)
 modelo.generateRandomFoods(args.Food)

@@ -16,8 +16,10 @@ class AproximateQAgent:
         self.alpha = 1
 
         #Parametro de exploracion
-        self.epsilon =0
+        self.epsilon =0.4
 
+    def setEpsilon(self,val):
+        self.epsilon = val
     def getWeights(self):
         return self.weights
 

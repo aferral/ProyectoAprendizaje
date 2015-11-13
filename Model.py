@@ -148,6 +148,15 @@ class JuegoModelo:
 
         pass
 
+    def trainModel(self,constTime,iterations):
+        print "Starting training of ",iterations
+        print "Weights ",self.planner.weights
+        self.planner.setEpsilon(0.8)
+        for i in range(iterations):
+            self.updateGame(constTime)
+        self.planner.setEpsilon(0)
+        print "Traing has ended ",self.planner.weights
+
     def setFeatureFun(self,function):
         self.featFun = function
 
@@ -220,13 +229,13 @@ class JuegoModelo:
         distC3 = distance(FuturoX,FuturoY,self.p3[0],self.p3[1])
         distC4 = distance(FuturoX,FuturoY,self.p4[0],self.p4[1])
 
-        print "Cordinates ",(FuturoX,FuturoY)
-        print "p1 - p3 ",self.p1," ",self.p3
-        print "Distancia bordes "
-        print "DistC1 ",distC1
-        print "DistC2 ",distC2
-        print "DistC3 ",distC3
-        print "DistC4 ",distC4
+        # print "Cordinates ",(FuturoX,FuturoY)
+        # print "p1 - p3 ",self.p1," ",self.p3
+        # print "Distancia bordes "
+        # print "DistC1 ",distC1
+        # print "DistC2 ",distC2
+        # print "DistC3 ",distC3
+        # print "DistC4 ",distC4
 
         minBor = min(distC1,distC2,distC3,distC4)
         # print "Distancia a Borde mas cercano ",minBor
@@ -254,6 +263,7 @@ class JuegoModelo:
 
     def updateGame(self,tiempo):
         self.iteraciones += 1
+        # print self.iteraciones
 
         self.estadoAnt = copy.deepcopy(self.listaObstaculos)
 
