@@ -197,13 +197,13 @@ class JuegoModelo:
             if obj != playerObj :
                 Xaux=obj.x
                 Yaux=obj.y
-                distNextStep=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
+                mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
 
-        vec.add(10/(distNextStep))
+        vec.add(10/(mindist))
         vec.add(1)
         return vec
-
     def bordAndDistFeature(self,estado,accion):
+
         playerObj = self.getPlayer(estado)
         mindist = 9999
         vec = VectorCustom()
@@ -214,7 +214,7 @@ class JuegoModelo:
             if obj != playerObj :
                 Xaux=obj.x
                 Yaux=obj.y
-                distNextStep=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
+                mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
 
 
         #Tambien calcula la distancia al board mas cercano
@@ -244,10 +244,14 @@ class JuegoModelo:
         minBor = min(distC1,distC2,distC3,distC4)
         # print "Distancia a Borde mas cercano ",minBor
 
-        vec.add(10/(minBor+0.1))
-        vec.add(10/(distNextStep))
+        vec.add(3/(minBor+0.1))
+        vec.add(10/(mindist))
         vec.add(1)
         return vec
+
+    def recompenzas(self, estado,accion):
+
+
 
     def getFeatures(self,estado,accion):
         return self.featFun(estado,accion)
@@ -478,7 +482,7 @@ else:
    arg2 = int(sys.argv[2]) #Esto quiere decir que utiliza feature de distancia solamente
 
 modelo = JuegoModelo()
-modelo.generateRandomObs(arg1)
+modelo.generateRandomObs(2)
 if arg2:
     print "Colocando FEATURE BORDER AND DIST"
     modelo.setBorderAndDistFeature()
