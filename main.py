@@ -149,6 +149,7 @@ class JuegoModelo:
         #Setear jugador
         playerObj = Obstacle(30,100,100)
         jugadorradio=playerObj.radio
+        jugadorradio=0
         self.borders2 = [0+ jugadorradio,width- jugadorradio,heigth- jugadorradio,0+ jugadorradio]
 
         playerObj.setPlayer()
@@ -227,23 +228,23 @@ class JuegoModelo:
         #p4-----------------------------p3
 
 
-        distC1 = distance(FuturoX,FuturoY,self.p1[0],FuturoY)
-        distC2 = distance(FuturoX,FuturoY,FuturoX,self.p1[1])
-        distC3 = distance(FuturoX,FuturoY,self.p3[0],FuturoY)
-        distC4 = distance(FuturoX,FuturoY,FuturoX,self.p3[1])
+        distC1 = distance(FuturoX,FuturoY,self.p1[0],self.p1[1])
+        distC2 = distance(FuturoX,FuturoY,self.p2[0],self.p2[1])
+        distC3 = distance(FuturoX,FuturoY,self.p3[0],self.p3[1])
+        distC4 = distance(FuturoX,FuturoY,self.p4[0],self.p4[1])
 
-        # print "Cordinates ",(FuturoX,FuturoY)
-        # print "p1 - p3 ",self.p1," ",self.p3
-        # print "Distancia bordes "
-        # print "DistC1 ",distC1
-        # print "DistC2 ",distC2
-        # print "DistC3 ",distC3
-        # print "DistC4 ",distC4
+        print "Cordinates ",(FuturoX,FuturoY)
+        print "p1 - p3 ",self.p1," ",self.p3
+        print "Distancia bordes "
+        print "DistC1 ",distC1
+        print "DistC2 ",distC2
+        print "DistC3 ",distC3
+        print "DistC4 ",distC4
 
         minBor = min(distC1,distC2,distC3,distC4)
         # print "Distancia a Borde mas cercano ",minBor
 
-        vec.add(1/(minBor+0.1))
+        vec.add(10/(minBor+0.1))
         vec.add(10/(distNextStep))
         vec.add(1)
         return vec
@@ -459,14 +460,14 @@ class JuegoVisual:
         pygame.quit()
 import sys
 import argparse
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument("N Enemies", type=int,help="Cuantos meteoros colocar", default=1)
-parser.add_argument("Feature ",help="0 feature dist, 1 featuresDistBorder", default=1)
-
-args = parser.parse_args()
-answer = args.square**2
+#
+#
+# parser = argparse.ArgumentParser()
+# parser.add_argument("N Enemies", type=int,help="Cuantos meteoros colocar", default=1)
+# parser.add_argument("Feature ",help="0 feature dist, 1 featuresDistBorder", default=1)
+#
+# args = parser.parse_args()
+# answer = args.square**2
 
 
 if len(sys.argv)  == 1 :
