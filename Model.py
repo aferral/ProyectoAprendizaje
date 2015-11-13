@@ -1,30 +1,18 @@
 import pygame
 from random import randint
 from CustomVector import VectorCustom
+from Features import FeatureExtractor
 from QlearningAgent import AproximateQAgent
 import math
 import copy
 
+from utils import *
 __author__ = 'aferral'
 
 
 NumAccion=10
 margin = 20
 
-def d(obj1,obj2):
-    return math.sqrt(math.pow((obj1.x-obj2.x),2)+math.pow((obj1.y-obj2.y),2))
-def distance(x1,y1,x2,y2):
-    return math.sqrt(math.pow((x1-x2),2)+math.pow((y1-y2),2))
-
-def getAngle(obj1,obj2):
-    return math.atan2(obj2.y,obj2.x)-math.atan2(obj1.y,obj1.x)
-
-def actionToPoint(obj,action):
-    deltaX= obj.velModulo*math.cos(action)*4
-    deltaY= obj.velModulo*math.sin(action)*4
-    FuturoX=obj.x + deltaX
-    FuturoY=obj.y + deltaY
-    return (FuturoX,FuturoY)
 
 class Obstacle():
 
@@ -101,6 +89,9 @@ class Obstacle():
 
 class JuegoModelo:
     def __init__(self):
+
+
+
         #Variables del modelo
         self.countDeath = 0
         self.iteraciones = 0
@@ -128,6 +119,8 @@ class JuegoModelo:
         self.p3 = (self.borders[1],self.borders[3])
         self.p4 = (self.borders[1],self.borders[2])
 
+        #Features
+        self.features = FeatureExtractor(self)
 
         self.featFun = None
         self.setJustDistFeature()
@@ -157,6 +150,11 @@ class JuegoModelo:
         self.planner.setEpsilon(0)
         print "Traing has ended ",self.planner.weights
 
+        return self.planner.weights
+    def setWeight(self,weight):
+        self.planner.weights = weight
+        self.planner.setEpsilon(0)
+
     def setFeatureFun(self,function):
         self.featFun = function
 
@@ -167,7 +165,7 @@ class JuegoModelo:
         protoWeight.add(0)
 
         self.planner.weights = protoWeight
-        self.setFeatureFun(self.justDistFeature)
+        self.setFeatureFun(self.features.justDistFeature)
 
     def setBorderAndDistFeature(self):
         protoWeight = VectorCustom()
@@ -176,87 +174,20 @@ class JuegoModelo:
         protoWeight.add(0)
 
         self.planner.weights = protoWeight
-        self.setFeatureFun(self.bordAndDistFeature)
+        self.setFeatureFun(self.features.bordAndDistFeature)
 
-    def getPlayer(self,estado):
-        return estado[0]
+    def setFoodFeature(self):
+        protoWeight = VectorCustom()
+        protoWeight.add(0)
+        protoWeight.add(0)
+        protoWeight.add(0)
+        protoWeight.add(0)
 
-
-    def justDistFeature(self,estado,accion):
-        playerObj = self.getPlayer(estado)
-        mindist = 9999
-        vec = VectorCustom()
-        distNextStep = mindist
-        (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
-
-        for obj in estado:
-            if obj != playerObj and obj.isComida == False:
-                Xaux=obj.x
-                Yaux=obj.y
-                mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
-
-        vec.add(10/(mindist))
-        vec.add(1)
-        return vec
-    def bordAndDistFeature(self,estado,accion):
-
-        playerObj = self.getPlayer(estado)
-        mindist = 9999
-        vec = VectorCustom()
-        distNextStep = mindist
-        (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
-
-        for obj in estado:
-            if obj != playerObj and obj.isComida == False:
-                Xaux=obj.x
-                Yaux=obj.y
-                mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
+        self.planner.weights = protoWeight
+        self.setFeatureFun(self.features.comiditas)
 
 
-        #Tambien calcula la distancia al board mas cercano
-        #Calcula distncias a lines que representar bordes
-        #p1-----------------------------p2
-        #-                              -
-        #-                              -
-        #-                              -
-        #-                              -
-        #-                              -
-        #p4-----------------------------p3
 
-
-        distC1 = distance(FuturoX,FuturoY,self.p1[0],self.p1[1])
-        distC2 = distance(FuturoX,FuturoY,self.p2[0],self.p2[1])
-        distC3 = distance(FuturoX,FuturoY,self.p3[0],self.p3[1])
-        distC4 = distance(FuturoX,FuturoY,self.p4[0],self.p4[1])
-
-        # print "Cordinates ",(FuturoX,FuturoY)
-        # print "p1 - p3 ",self.p1," ",self.p3
-        # print "Distancia bordes "
-        # print "DistC1 ",distC1
-        # print "DistC2 ",distC2
-        # print "DistC3 ",distC3
-        # print "DistC4 ",distC4
-
-        minBor = min(distC1,distC2,distC3,distC4)
-        # print "Distancia a Borde mas cercano ",minBor
-
-        vec.add(3/(minBor+0.1))
-        vec.add(10/(mindist))
-        vec.add(1)
-        return vec
-
-    def comiditas(self, estado,accion):
-        vec = self.bordAndDistFeature(estado,accion)
-        playerObj = self.getPlayer(estado)
-        mindist = 9999
-        (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
-
-        for obj in estado:
-            if obj != playerObj and obj.isComida:
-                Xaux=obj.x
-                Yaux=obj.y
-                mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
-        vec.add(1/(mindist))
     def getFeatures(self,estado,accion):
         return self.featFun(estado,accion)
 
@@ -282,7 +213,7 @@ class JuegoModelo:
             print "!!!!!!!!!!!!!!! Me mori !!!!!!!!!!!   ",self.countDeath
 
             self.ended = False
-            playerObj = self.getPlayer(self.estadoActual)
+            playerObj = getPlayer(self.estadoActual)
             playerObj.toStart()
             return
 
@@ -297,7 +228,7 @@ class JuegoModelo:
         pass
     def calculateReward(self,estado):
         acumulative=0
-        playerObj = self.getPlayer(estado)
+        playerObj = getPlayer(estado)
         listaColisiones = self.colision(playerObj)
 
         if len(listaColisiones)>0:
@@ -305,7 +236,7 @@ class JuegoModelo:
                 if obj.isComida:
                     print "Comio una comidita"
                     self.listaObstaculos.remove(obj)
-                    acumulative += 100
+                    acumulative += 1000
                 else:
                     print "COLLISION DETECTADA"
                     self.endGame()
@@ -316,7 +247,7 @@ class JuegoModelo:
         self.ended = True
         pass
     def doAction(self,estado,action):
-        playerObj = self.getPlayer(estado)
+        playerObj = getPlayer(estado)
 
         playerObj.changeSpeed((playerObj.velModulo*math.cos(action),playerObj.velModulo*math.sin(action)))
         # playerObj.teleport(actionToPoint(playerObj,action))
@@ -395,7 +326,7 @@ class JuegoModelo:
 
         pass
     def legalActions(self,estado):
-        jugador= self.getPlayer(estado)
+        jugador= getPlayer(estado)
         ponderaciones=self.CalcularPonderacion()
         acciones=[]
         for index,angulo in enumerate(ponderaciones):

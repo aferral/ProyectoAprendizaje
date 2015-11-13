@@ -109,12 +109,20 @@ parser.add_argument(dest='training',help="0 No pre training 1 pre Training", def
 args = parser.parse_args()
 
 #bla
-modelo = JuegoModelo()
-modelo.generateRandomObs(args.nEnemies)
-modelo.generateRandomFoods(args.Food)
+modeloTraining = JuegoModelo()
+modeloTraining.generateRandomObs(args.nEnemies)
+modeloTraining.generateRandomFoods(args.Food)
 if args.feature:
-    modelo.setBorderAndDistFeature()
+    modeloTraining.setBorderAndDistFeature()
+modeloTraining.setFoodFeature()
 if args.training:
-    modelo.trainModel(constTime,100)
-vista = JuegoVisual(modelo)
+    w = modeloTraining.trainModel(constTime,1000)
+
+modeloReal = JuegoModelo()
+modeloReal.generateRandomObs(args.nEnemies)
+modeloReal.generateRandomFoods(args.Food)
+
+modeloReal.setFoodFeature()
+modeloReal.setWeight(w)
+vista = JuegoVisual(modeloReal)
 vista.loop()
