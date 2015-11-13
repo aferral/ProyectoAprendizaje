@@ -25,7 +25,7 @@ from random import randint
 # Define some colors
 WHITE = (255, 255, 255)
 margin = 20
-fps = 30
+fps = 20
 NumAccion=10
 
 constTime = fps/1000.0
@@ -39,8 +39,8 @@ def getAngle(obj1,obj2):
     return math.atan2(obj2.y,obj2.x)-math.atan2(obj1.y,obj1.x)
 
 def actionToPoint(obj,action):
-    deltaX= constTime*obj.velModulo*math.cos(action)*500
-    deltaY= constTime*obj.velModulo*math.sin(action)*500
+    deltaX= obj.velModulo*math.cos(action)*5
+    deltaY= obj.velModulo*math.sin(action)*5
     FuturoX=obj.x + deltaX
     FuturoY=obj.y + deltaY
     return (FuturoX,FuturoY)
@@ -405,9 +405,8 @@ class JuegoVisual:
 
 
     def loop(self):
-
         while not self.done:
-            # raw_input()
+            raw_input()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.done = True
@@ -465,6 +464,6 @@ modelo.generateRandomObs(arg1)
 if arg2:
     print "Colocando FEATURE BORDER AND DIST"
     modelo.setBorderAndDistFeature()
-modelo.setBorderAndDistFeature()
+modelo.setJustDistFeature()
 vista = JuegoVisual(modelo)
 vista.loop()
