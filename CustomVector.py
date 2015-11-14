@@ -9,13 +9,21 @@ class VectorCustom:
         pass
     def add(self,val):
         self.vals.append(val)
+    def __len__(self):
+        return len(self.vals)
+    def __getitem__(self, item):
+        return self.vals[int(item)]
+    def __repr__(self):
+        return str(self.vals)
+    def __setitem__(self, key, value):
+        self.vals[key] = value
     def __mul__(self, y ):
 
         sum = 0
         x = self
         if len(x) != len(y):
-            return None
-        for inde in range(x.vals):
-            sum += x[inde] * y[inde]
+            raise Exception("Error vector dimension")
+        for inde,val in enumerate(y.vals):
+            sum += (x[inde] * val)
         return sum
 
