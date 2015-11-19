@@ -102,27 +102,37 @@ class JuegoVisual:
 
 parser = argparse.ArgumentParser()
 parser.add_argument(dest="nEnemies", type=int,help="Cuantos meteoros colocar", default=2, nargs='?')
-parser.add_argument(dest='feature',help="0 feature dist, 1 featuresDistBorder", default=1, nargs='?')
+parser.add_argument(dest='feature', type=int,help="0 feature dist, 1 featuresDistBorder", default=1, nargs='?')
 parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=20, nargs='?')
 
 parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
 args = parser.parse_args()
+print args
+#Setear el juego, modelo
 
-#bla
+modeloReal = JuegoModelo()
 modeloTraining = JuegoModelo()
+
 modeloTraining.generateRandomObs(args.nEnemies)
 modeloTraining.generateRandomFoods(args.Food)
-if args.feature:
+
+if args.feature == 1:
     modeloTraining.setBorderAndDistFeature()
-modeloTraining.setFoodFeature()
+    modeloReal.setBorderAndDistFeature()
+elif args.feature == 2:
+    modeloTraining.setFoodFeature()
+    modeloReal.setFoodFeature()
+elif args.feature == 0:
+    modeloTraining.setJustDistFeature()
+    modeloReal.setJustDistFeature()
+
 if args.training:
     w = modeloTraining.trainModel(constTime,1000)
 
-modeloReal = JuegoModelo()
+
 modeloReal.generateRandomObs(args.nEnemies)
 modeloReal.generateRandomFoods(args.Food)
 
-modeloReal.setFoodFeature()
 modeloReal.setWeight(w)
 vista = JuegoVisual(modeloReal)
 vista.loop()
