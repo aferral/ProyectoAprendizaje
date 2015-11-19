@@ -159,7 +159,7 @@ class JuegoModelo:
         self.featFun = function
 
     def setJustDistFeature(self):
-
+        print "Feature de just dist seteada "
         protoWeight = VectorCustom()
         protoWeight.add(0)
         protoWeight.add(0)
@@ -168,6 +168,7 @@ class JuegoModelo:
         self.setFeatureFun(self.features.justDistFeature)
 
     def setBorderAndDistFeature(self):
+        print "Feature de Border dist seteada "
         protoWeight = VectorCustom()
         protoWeight.add(0)
         protoWeight.add(0)
@@ -177,6 +178,7 @@ class JuegoModelo:
         self.setFeatureFun(self.features.bordAndDistFeature)
 
     def setFoodFeature(self):
+        print "Feature de food seteada "
         protoWeight = VectorCustom()
         protoWeight.add(0)
         protoWeight.add(0)
