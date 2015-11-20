@@ -84,7 +84,7 @@ class FeatureExtractor:
         playerObj = getPlayer(estado)
         mindist = 9999
         (FuturoX,FuturoY) = actionToPoint(playerObj,accion,self.modelo)
-
+        #bla
         for obj in estado:
             if obj != playerObj and obj.isComida:
                 Xaux=obj.x

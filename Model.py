@@ -188,12 +188,11 @@ class JuegoModelo:
             pared=self.borders1[i]
             margin=pared
             if i == 0 and (pared-(obj.x)) > 0:
-                print "Choque en 0"
-                print obj.x
+                #print "Choque en 0"
                 obj.x = obj.x + self.borders1[1]
                 #obj.velX *= -1
             if i == 1 and ((obj.x)- pared) > 0:
-                print "Choque en 1"
+                #print "Choque en 1"
                 obj.x = obj.x - margin
                 #obj.velX *= -1
             if i == 2 and ((obj.y)- pared) > 0:

@@ -30,7 +30,7 @@ class JuegoVisual:
     def __init__(self,juegomodelo):
 
         #Variable prueba
-        self.modoStep = True
+        self.modoStep = False
 
         self.done = False
         self.juegomodelo = juegomodelo
@@ -164,7 +164,7 @@ parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDis
 parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=40, nargs='?')
 
 parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
-parser.add_argument(dest='testOrVisual',help="0 test 1 visualGame", default=1, nargs='?')
+parser.add_argument(dest='testOrVisual',help="0 test 1 visualGame", default=0, nargs='?')
 
 args = parser.parse_args()
 print args
@@ -193,9 +193,10 @@ else:
     modeloReal.testModel(constTime,1000)
 
     print "Ahora con pesos aleatorios "
-
+    modeloReal = JuegoModelo()
     modeloReal.generateRandomObs(args.nEnemies)
     modeloReal.generateRandomFoods(args.Food)
+    modeloReal.setFeatureArg(args.feature)
 
     modeloReal.planner.randomWeight()
     modeloReal.testModel(constTime,1000)
