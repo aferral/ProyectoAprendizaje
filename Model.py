@@ -82,6 +82,8 @@ class Obstacle():
         self.northPoint = point
     def newAngle(self,angle):
         self.anguloAct = angle
+    def bounce(self):
+        self.anguloAct -= 90
 
     #cree esta funcion para saber si esta en el angulo de vision
     def estaenvision(self,objm):
@@ -120,7 +122,7 @@ class JuegoModelo:
         self.borders2 = [0,width,heigth,0]
         self.dim = (width,heigth)
 
-        self.traspasarPared= False;
+        self.traspasarPared= True;
 
         self.p1 = (self.borders[0],self.borders[2])
         self.p2 = (self.borders[0],self.borders[3])
@@ -238,7 +240,7 @@ class JuegoModelo:
         for elem in self.listaObstaculos:
 
             elem.update(tiempo)
-            if elem.player == False:
+            if (elem.player == False) or (not(self.traspasarPared)):
                 self.wallColl(elem)
 
         playerObj = getPlayer(self.estadoActual)
@@ -313,18 +315,23 @@ class JuegoModelo:
                # print "Choque en 0"
                 obj.x = obj.radio + margin
                 obj.velX *= -1
+                obj.bounce()
             if i == 1 and ((obj.x + obj.radio)- pared) > 0:
                # print "Choque en 1"
                 obj.x = -obj.radio + margin
                 obj.velX *= -1
+                obj.bounce()
             if i == 2 and ((obj.y + obj.radio)- pared) > 0:
               #  print "Choque en 2"
                 obj.y = -obj.radio + margin
                 obj.velY *= -1
+                obj.bounce()
             if i == 3 and (pared-(obj.y - obj.radio)) > 0:
               #  print "Choque en 3"
                 obj.y = obj.radio + margin
                 obj.velY *= -1
+                obj.bounce()
+
         # exit(1)
 
         pass
@@ -370,7 +377,6 @@ class JuegoModelo:
     def legalActions(self,estado):
         jugador= getPlayer(estado)
         ponderaciones=self.CalcularPonderacion()
-        ponderaciones.append(-6)
 
         acciones=[]
         for index,angulo in enumerate(ponderaciones):
@@ -379,24 +385,24 @@ class JuegoModelo:
 
             (newX,newY)= actionToPoint(jugador,auxangulo, self)
             if self.traspasarPared == False:
-                if (newX<self.borders2[1] and newX>self.borders2[0]) and (newY>self.borders2[3] and newY<self.borders2[2]):
-                    self.superestados[index]=((newX,newY))
-                    acciones.append(auxangulo)
-                    if angulo == 0:
-                        jugador.setNorth((newX,newY))
+                #if (newX<self.borders2[1] and newX>self.borders2[0]) and (newY>self.borders2[3] and newY<self.borders2[2]):
+                self.superestados[index]=((newX,newY))
+                acciones.append(auxangulo)
+                if angulo == 0:
+                    jugador.setNorth((newX,newY))
 
-                else:
-                    self.superestados[index]=(None)
+                #else:
+                    #self.superestados[index]=(None)
             else:
                 self.superestados[index]=((newX,newY))
                 acciones.append(auxangulo)
+            if angulo == 0:
+                jugador.setNorth((newX,newY))
         # print "LA salidoa es ",acciones
-
-
         #print "La salidoa es ",acciones,self.superestados
         if len(acciones) == 0:
             raise Exception("TIRO 0 ACCIONES");
 
         return acciones
     def CalcularPonderacion(self):
-        return range(-3,4)
+        return range(-4,5)

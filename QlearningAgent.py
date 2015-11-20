@@ -13,7 +13,7 @@ class AproximateQAgent:
         self.juego = juego
         self.discount = 0.8
         #Parametro de aprendizaje
-        self.alpha = 1
+        self.alpha = 0.1
 
         #Parametro de exploracion
         self.epsilon =0.4

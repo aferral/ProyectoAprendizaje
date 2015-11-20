@@ -30,7 +30,7 @@ class JuegoVisual:
     def __init__(self,juegomodelo):
 
         #Variable prueba
-        self.modoStep = False
+        self.modoStep = True
 
         self.done = False
         self.juegomodelo = juegomodelo
