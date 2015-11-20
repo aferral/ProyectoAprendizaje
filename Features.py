@@ -78,3 +78,17 @@ class FeatureExtractor:
                 mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
         vec.add(1/(mindist+0.1))
         return vec
+
+    def featPerse(self,estado,accion):
+        vec = self.bordAndDistFeature(estado,accion)
+        playerObj = getPlayer(estado)
+        mindist = 9999
+        (FuturoX,FuturoY) = actionToPoint(playerObj,accion,self.modelo)
+
+        for obj in estado:
+            if obj != playerObj and obj.isComida:
+                Xaux=obj.x
+                Yaux=obj.y
+                mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
+        vec.add(1/(mindist+0.1))
+        return vec
