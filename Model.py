@@ -120,7 +120,7 @@ class JuegoModelo:
         self.borders2 = [0,width,heigth,0]
         self.dim = (width,heigth)
 
-        self.traspasarPared= True;
+        self.traspasarPared= False;
 
         self.p1 = (self.borders[0],self.borders[2])
         self.p2 = (self.borders[0],self.borders[3])
@@ -189,10 +189,6 @@ class JuegoModelo:
                 print "Choque en 0"
                 print obj.x
                 obj.x = obj.x + self.borders1[1]
-
-    def setFeatureArg(self,key):
-        print "Colocando features ",key
-        (function,dimension) = self.dictFeatures[key]
                 #obj.velX *= -1
             if i == 1 and ((obj.x)- pared) > 0:
                 print "Choque en 1"
@@ -208,23 +204,24 @@ class JuegoModelo:
                 #obj.velY *= -1
         # exit(1)
 
+    def setFeatureArg(self,key):
+        print "Colocando features ",key
+        protoWeight = VectorCustom()
+        (function,dimension) = self.dictFeatures[key]
+        for elem in range(dimension):
+            protoWeight.add(0)
+        self.planner.weights = protoWeight
+        self.setFeatureFun(function)
+
+
         pass
 
 
     def setFeatureFun(self,function):
         self.featFun = function
 
-    def setJustDistFeature(self):
-        print "Feature de just dist seteada "
-        protoWeight = VectorCustom()
-        for elem in range(dimension):
-            protoWeight.add(0)
-        self.planner.weights = protoWeight
-        self.setFeatureFun(function)
-
     def setFeatureFun(self,function):
         self.featFun = function
-
 
     def getFeatures(self,estado,accion):
         return self.featFun(estado,accion)
@@ -385,17 +382,16 @@ class JuegoModelo:
                 if (newX<self.borders2[1] and newX>self.borders2[0]) and (newY>self.borders2[3] and newY<self.borders2[2]):
                     self.superestados[index]=((newX,newY))
                     acciones.append(auxangulo)
+                    if angulo == 0:
+                        jugador.setNorth((newX,newY))
+
                 else:
                     self.superestados[index]=(None)
             else:
                 self.superestados[index]=((newX,newY))
                 acciones.append(auxangulo)
         # print "LA salidoa es ",acciones
-                if angulo == 0:
-                    jugador.setNorth((newX,newY))
 
-            else:
-                self.superestados[index]=(None)
 
         #print "La salidoa es ",acciones,self.superestados
         if len(acciones) == 0:
