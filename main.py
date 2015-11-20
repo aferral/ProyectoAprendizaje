@@ -160,6 +160,8 @@ class JuegoVisual:
 
 parser = argparse.ArgumentParser()
 parser.add_argument(dest="nEnemies", type=int,help="Cuantos meteoros colocar", default=7, nargs='?')
+parser.add_argument(dest="persecutoresEnemies", type=int,help="Cuantos meteoros colocar", default=1, nargs='?')
+
 parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDist", default='foodDist', nargs='?')
 parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=40, nargs='?')
 
@@ -177,6 +179,8 @@ modeloTraining.generateRandomObs(args.nEnemies)
 modeloTraining.generateRandomFoods(args.Food)
 modeloReal.generateRandomObs(args.nEnemies)
 modeloReal.generateRandomFoods(args.Food)
+modeloReal.generateRandomPersecutor(args.persecutoresEnemies)
+
 
 modeloTraining.setFeatureArg(args.feature)
 modeloReal.setFeatureArg(args.feature)
@@ -195,6 +199,7 @@ else:
     print "Ahora con pesos aleatorios "
     modeloReal = JuegoModelo()
     modeloReal.generateRandomObs(args.nEnemies)
+    modeloReal.generateRandomPersecutor(args.persecutoresEnemies)
     modeloReal.generateRandomFoods(args.Food)
     modeloReal.setFeatureArg(args.feature)
 

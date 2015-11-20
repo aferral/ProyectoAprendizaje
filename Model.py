@@ -59,6 +59,11 @@ class Obstacle():
         self.velX = velTuple[0]
         self.velY = velTuple[1]
 
+    def Perseguir(self, objbueno):
+        self.anguloAct = math.atan((objbueno.y-self.y)/(objbueno.x-self.x))
+        self.velY = math.sin(self.anguloAct)*self.velModulo
+        self.velX = math.cos(self.anguloAct)*self.velModulo
+
     def update(self,time):
         delta = time
         self.x += (self.velX*delta*200)
@@ -105,6 +110,7 @@ class JuegoModelo:
         self.score = 0
 
         self.listaObstaculos = []
+        self.listaPersecutores =[]
 
         self.estadoActual = self.listaObstaculos
         self.estadoAnt = self.listaObstaculos
@@ -119,7 +125,7 @@ class JuegoModelo:
         heigth = 600
         self.borders = [margin,width-margin,margin,heigth-margin]
         self.borders1 = [0,width,heigth,0]
-        self.borders2 = [0,width,heigth,0]
+        self.borders2 = [0,width,heigth,0   ]
         self.dim = (width,heigth)
 
         self.traspasarPared= True;
@@ -234,16 +240,18 @@ class JuegoModelo:
 
         self.estadoAnt = copy.deepcopy(self.listaObstaculos)
 
+        playerObj = getPlayer(self.estadoActual)
+        playerObj.update(tiempo)
+        self.VerifyPlayer(tiempo, playerObj)
 
         #Hago todos lso mov
+        for stalker in self.listaPersecutores:
+            stalker.Perseguir(playerObj)
+
         for elem in self.listaObstaculos:
-
-            elem.update(tiempo)
             if (elem.player == False) or (not(self.traspasarPared)):
+                elem.update(tiempo)
                 self.wallColl(elem)
-
-        playerObj = getPlayer(self.estadoActual)
-        self.VerifyPlayer(tiempo, playerObj)
 
 
         #Setear estado actual y ant
@@ -357,6 +365,12 @@ class JuegoModelo:
         food.changeSpeed((0,0))
         food.isComida=True
         self.listaObstaculos.append(food)
+    def newPersecutor(self,x,y):
+        obstacle=Obstacle(30,x,y)
+        self.listaObstaculos.append(obstacle)
+        self.listaPersecutores.append(obstacle)
+
+
     def generateRandomObs(self,n):
 
         for i in range(n):
@@ -365,6 +379,15 @@ class JuegoModelo:
             self.newObstacle(xcord,ycord)
 
         pass
+    def generateRandomPersecutor(self,n):
+
+        for i in range(n):
+            xcord = randint(self.borders[0],self.borders[1])
+            ycord = randint(self.borders[2],self.borders[3])
+            self.newPersecutor(xcord,ycord)
+        pass
+
+
     #estooo!!
     def generateRandomFoods(self, m):
         for i in range(m):
