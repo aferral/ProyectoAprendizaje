@@ -8,11 +8,39 @@ def distance(x1,y1,x2,y2):
 def getAngle(obj1,obj2):
     return math.atan2(obj2.y,obj2.x)-math.atan2(obj1.y,obj1.x)
 
-def actionToPoint(obj,action):
+def actionToPoint(obj,action, modelo):
+
     deltaX= obj.velModulo*math.cos(action)*4
     deltaY= obj.velModulo*math.sin(action)*4
-    FuturoX=obj.x + deltaX
-    FuturoY=obj.y + deltaY
+    if modelo.traspasarPared ==False:
+        FuturoX=obj.x + deltaX
+        FuturoY=obj.y + deltaY
+    else:
+        FuturoX=obj.x + deltaX
+        FuturoY=obj.y + deltaY
+        for i in range(4):
+            pared=modelo.borders1[i]
+            margin=pared
+            # bla = [self.borders[2],self.borders[3],self.borders[0],self.borders[1]]
+            # pared=bla[i]
+            if i == 0 and (pared-(FuturoX)) > 0:
+               # print "Choque en 0"
+                FuturoX = FuturoX + modelo.borders1[1]
+            if i == 1 and ((FuturoX)- pared) > 0:
+               # print "Choque en 1"
+                FuturoX = FuturoX - pared
+             #   obj.velX *= -1
+            if i == 2 and ((FuturoY)- pared) > 0:
+              #  print "Choque en 2"
+                FuturoY = FuturoY - margin
+              #  obj.velY *= -1
+            if i == 3 and (pared-(FuturoY)) > 0:
+              #  print "Choque en 3"
+                FuturoY = FuturoY + modelo.borders1[2]
+               # obj.velY *= -1
+        # exit(1)
+        pass
+
     return (FuturoX,FuturoY)
 def getPlayer(estado):
     return estado[0]

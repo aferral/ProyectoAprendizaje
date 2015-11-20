@@ -11,12 +11,12 @@ class AproximateQAgent:
         self.weights = VectorCustom()
 
         self.juego = juego
-        self.discount = 0.8
+        self.discount = 1
         #Parametro de aprendizaje
-        self.alpha = 1
+        self.alpha = 0.1
 
         #Parametro de exploracion
-        self.epsilon =0.4
+        self.epsilon =0.0
 
     def setEpsilon(self,val):
         self.epsilon = val

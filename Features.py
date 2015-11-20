@@ -10,6 +10,7 @@ class FeatureExtractor:
         self.p3 = modelo.p3
         self.p4 = modelo.p4
 
+        self.modelo=modelo
 
 
     def justDistFeature(self,estado,accion):
@@ -17,7 +18,7 @@ class FeatureExtractor:
         mindist = 9999
         vec = VectorCustom()
         distNextStep = mindist
-        (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
+        (FuturoX,FuturoY) = actionToPoint(playerObj,accion,self.modelo)
 
         for obj in estado:
             if obj != playerObj and obj.isComida == False:
@@ -32,7 +33,7 @@ class FeatureExtractor:
 
         vec = self.justDistFeature(estado,accion)
         playerObj = getPlayer(estado)
-        (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
+        (FuturoX,FuturoY) = actionToPoint(playerObj,accion,self.modelo)
         #Tambien calcula la distancia al board mas cercano
         #Calcula distncias a lines que representar bordes
         #p1-----------------------------p2
@@ -60,7 +61,7 @@ class FeatureExtractor:
         minBor = min(distC1,distC2,distC3,distC4)
         # print "Distancia a Borde mas cercano ",minBor
 
-        vec.add(3/(minBor+0.1))
+        vec.add(1/(minBor+0.1))
 
         return vec
 
@@ -68,7 +69,7 @@ class FeatureExtractor:
         vec = self.bordAndDistFeature(estado,accion)
         playerObj = getPlayer(estado)
         mindist = 9999
-        (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
+        (FuturoX,FuturoY) = actionToPoint(playerObj,accion,self.modelo)
 
         for obj in estado:
             if obj != playerObj and obj.isComida:

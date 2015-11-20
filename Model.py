@@ -10,7 +10,7 @@ from utils import *
 __author__ = 'aferral'
 
 
-NumAccion=10
+NumAccion=30
 margin = 20
 
 
@@ -114,6 +114,8 @@ class JuegoModelo:
         self.borders2 = [0,width,heigth,0]
         self.dim = (width,heigth)
 
+        self.traspasarPared= True;
+
         self.p1 = (self.borders[0],self.borders[2])
         self.p2 = (self.borders[0],self.borders[3])
         self.p3 = (self.borders[1],self.borders[3])
@@ -155,6 +157,34 @@ class JuegoModelo:
         self.planner.weights = weight
         self.planner.setEpsilon(0)
         self.planner.endLearning()
+    def VerifyPlayer(self,time,obj):
+        for i in range(4):
+            # bla = [self.borders[2],self.borders[3],self.borders[0],self.borders[1]]
+            # pared=bla[i]
+            pared=self.borders1[i]
+            margin=pared
+            if i == 0 and (pared-(obj.x)) > 0:
+                print "Choque en 0"
+                print obj.x
+                obj.x = obj.x + self.borders1[1]
+
+                #obj.velX *= -1
+            if i == 1 and ((obj.x)- pared) > 0:
+                print "Choque en 1"
+                obj.x = obj.x - margin
+                #obj.velX *= -1
+            if i == 2 and ((obj.y)- pared) > 0:
+              #  print "Choque en 2"
+                obj.y = obj.y - margin
+               # obj.velY *= -1
+            if i == 3 and (pared-(obj.y)) > 0:
+              #  print "Choque en 3"
+                obj.y = obj.y + self.borders1[2]
+                #obj.velY *= -1
+        # exit(1)
+
+        pass
+
 
     def setFeatureFun(self,function):
         self.featFun = function
@@ -206,10 +236,16 @@ class JuegoModelo:
         for elem in self.listaObstaculos:
 
             elem.update(tiempo)
-            self.wallColl(elem)
+            if elem.player == False:
+                self.wallColl(elem)
+
+        playerObj = getPlayer(self.estadoActual)
+        self.VerifyPlayer(tiempo, playerObj)
+
 
         #Setear estado actual y ant
         self.estadoActual = self.listaObstaculos
+
 
         if self.ended:
             self.countDeath += 1
@@ -245,7 +281,7 @@ class JuegoModelo:
                     self.endGame()
                     acumulative += -1000
             return acumulative
-        return 1
+        return 0
     def endGame(self): #Me complico resetear el juego simplemente mantendre la transicion plana
         self.ended = True
         pass
@@ -253,7 +289,7 @@ class JuegoModelo:
         playerObj = getPlayer(estado)
 
         playerObj.changeSpeed((playerObj.velModulo*math.cos(action),playerObj.velModulo*math.sin(action)))
-        # playerObj.teleport(actionToPoint(playerObj,action))
+        # playerObj.teleport(actionToPoint(playerObj,action,self))
 
 
         self.lastAction = action
@@ -263,7 +299,6 @@ class JuegoModelo:
         #print"vvvv",accion
         self.planner.update(estadoAnt,accion,estado,recomensa)
         pass
-
     def wallColl(self,obj):
         for i in range(4):
             # bla = [self.borders[2],self.borders[3],self.borders[0],self.borders[1]]
@@ -336,13 +371,16 @@ class JuegoModelo:
             deltaAngulo=angulo*jugador.anguloGiro
             auxangulo = deltaAngulo+jugador.anguloAct
 
-            (newX,newY)= actionToPoint(jugador,auxangulo)
-
-            if (newX<self.borders2[1] and newX>self.borders2[0]) and (newY>self.borders2[3] and newY<self.borders2[2]):
+            (newX,newY)= actionToPoint(jugador,auxangulo, self)
+            if self.traspasarPared == False:
+                if (newX<self.borders2[1] and newX>self.borders2[0]) and (newY>self.borders2[3] and newY<self.borders2[2]):
+                    self.superestados[index]=((newX,newY))
+                    acciones.append(auxangulo)
+                else:
+                    self.superestados[index]=(None)
+            else:
                 self.superestados[index]=((newX,newY))
                 acciones.append(auxangulo)
-            else:
-                self.superestados[index]=(None)
         # print "LA salidoa es ",acciones
         if len(acciones) == 0:
             raise Exception("TIRO 0 ACCIONES");

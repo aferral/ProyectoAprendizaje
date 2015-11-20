@@ -30,7 +30,7 @@ class JuegoVisual:
     def __init__(self,juegomodelo):
 
         #Variable prueba
-        self.modoStep = False
+        self.modoStep = True
 
         self.done = False
         self.juegomodelo = juegomodelo
@@ -63,7 +63,7 @@ class JuegoVisual:
 
 
 
-        h = 30
+        h = 8
         listaPoints = [0 for j in range(h*h)]
 
         matrix = [[copy.deepcopy(self.juegomodelo.estadoActual) for j in range(h)] for i in range(h)]
@@ -114,23 +114,24 @@ class JuegoVisual:
                 #Aca dibujar mapa de features
                 self.drawQvalues()
 
+            control = 1
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.done = True
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
                         print "Izq"
-                        self.juegomodelo.listaObstaculos[1].changeSpeed((-1,0))
+                        self.juegomodelo.listaObstaculos[control].changeSpeed((-1,0))
 
                     if event.key == pygame.K_RIGHT:
                         print "Derecha"
-                        self.juegomodelo.listaObstaculos[1].changeSpeed((1,0))
+                        self.juegomodelo.listaObstaculos[control].changeSpeed((1,0))
                     if event.key == pygame.K_UP:
                         print "Arriba"
-                        self.juegomodelo.listaObstaculos[1].changeSpeed((0,-1))
+                        self.juegomodelo.listaObstaculos[control].changeSpeed((0,-1))
                     if event.key == pygame.K_DOWN:
                         print "Down"
-                        self.juegomodelo.listaObstaculos[1].changeSpeed((0,1))
+                        self.juegomodelo.listaObstaculos[control].changeSpeed((0,1))
 
                         pygame.display.flip()
 
@@ -189,7 +190,7 @@ if args.training:
 
 
 modeloReal.generateRandomObs(args.nEnemies)
-modeloReal.generateRandomFoods(args.Food)
+modeloReal.generateRandomFoods(40)
 
 modeloReal.setWeight(w)
 vista = JuegoVisual(modeloReal)
