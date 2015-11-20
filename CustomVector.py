@@ -25,7 +25,7 @@ class VectorCustom:
         sum = 0
         x = self
         if len(x) != len(y):
-            raise Exception("Error vector dimension")
+            raise Exception("Error vector dimension",len(x),len(y))
         for inde,val in enumerate(y.vals):
             sum += (x[inde] * val)
         return sum

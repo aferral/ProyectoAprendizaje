@@ -29,6 +29,7 @@ class Obstacle():
         self.player = False
         self.isComida = False
 
+        self.northPoint = (0,0)
 
 
 
@@ -74,9 +75,13 @@ class Obstacle():
     def draw(self):
         if self.screen != None:
             pygame.draw.circle(self.screen,self.color,(int(self.x),int(self.y)),self.radio,1)
-        # if self.player:
-        #     pygame.draw.circle(self.screen,(0,255,0),(int(self.x),int(self.y)),self.distVision,1)
+        if self.player:
+            pygame.draw.line(self.screen, (0,0,0), (int(self.x),int(self.y)), self.northPoint, 1)
 
+    def setNorth(self,point):
+        self.northPoint = point
+    def newAngle(self,angle):
+        self.anguloAct = angle
 
     #cree esta funcion para saber si esta en el angulo de vision
     def estaenvision(self,objm):
@@ -95,6 +100,7 @@ class JuegoModelo:
         #Variables del modelo
         self.countDeath = 0
         self.iteraciones = 0
+        self.score = 0
 
         self.listaObstaculos = []
 
@@ -107,8 +113,8 @@ class JuegoModelo:
         self.planner = AproximateQAgent(self)
 
         #Cosas de bordes
-        width = 400
-        heigth = 500
+        width = 800
+        heigth = 600
         self.borders = [margin,width-margin,margin,heigth-margin]
         self.borders1 = [0,width,heigth,0]
         self.borders2 = [0,width,heigth,0]
@@ -125,7 +131,6 @@ class JuegoModelo:
         self.features = FeatureExtractor(self)
 
         self.featFun = None
-        self.setJustDistFeature()
         self.ended = False
 
         #Setear jugador
@@ -139,6 +144,10 @@ class JuegoModelo:
         self.listaObstaculos.append(playerObj)
         self.superestados=[0 for i in range(NumAccion)]
 
+        #features y sus dimensiones
+        self.dictFeatures = {'justDist'      :   (self.features.justDistFeature,2),
+                        'borderDist'    :   (self.features.bordAndDistFeature,3),
+                        'foodDist'      :   (self.features.comiditas,4)}
 
 
         pass
@@ -153,6 +162,19 @@ class JuegoModelo:
         print "Traing has ended ",self.planner.weights
 
         return self.planner.weights
+
+    def testModel(self,constTime,iterations):
+        print "Starting test of ",iterations
+        print "Weights ",self.planner.weights
+        for i in range(iterations):
+            self.updateGame(constTime)
+        print "Traing has ended el score es ",self.score
+        pass
+
+    def validateModel(self):
+        pass
+
+
     def setWeight(self,weight):
         self.planner.weights = weight
         self.planner.setEpsilon(0)
@@ -168,6 +190,9 @@ class JuegoModelo:
                 print obj.x
                 obj.x = obj.x + self.borders1[1]
 
+    def setFeatureArg(self,key):
+        print "Colocando features ",key
+        (function,dimension) = self.dictFeatures[key]
                 #obj.velX *= -1
             if i == 1 and ((obj.x)- pared) > 0:
                 print "Choque en 1"
@@ -192,33 +217,13 @@ class JuegoModelo:
     def setJustDistFeature(self):
         print "Feature de just dist seteada "
         protoWeight = VectorCustom()
-        protoWeight.add(0)
-        protoWeight.add(0)
-
+        for elem in range(dimension):
+            protoWeight.add(0)
         self.planner.weights = protoWeight
-        self.setFeatureFun(self.features.justDistFeature)
+        self.setFeatureFun(function)
 
-    def setBorderAndDistFeature(self):
-        print "Feature de Border dist seteada "
-        protoWeight = VectorCustom()
-        protoWeight.add(0)
-        protoWeight.add(0)
-        protoWeight.add(0)
-
-        self.planner.weights = protoWeight
-        self.setFeatureFun(self.features.bordAndDistFeature)
-
-    def setFoodFeature(self):
-        print "Feature de food seteada "
-        protoWeight = VectorCustom()
-        protoWeight.add(0)
-        protoWeight.add(0)
-        protoWeight.add(0)
-        protoWeight.add(0)
-
-        self.planner.weights = protoWeight
-        self.setFeatureFun(self.features.comiditas)
-
+    def setFeatureFun(self,function):
+        self.featFun = function
 
 
     def getFeatures(self,estado,accion):
@@ -249,7 +254,7 @@ class JuegoModelo:
 
         if self.ended:
             self.countDeath += 1
-            print "!!!!!!!!!!!!!!! Me mori !!!!!!!!!!!   ",self.countDeath
+            #print "!!!!!!!!!!!!!!! Me mori !!!!!!!!!!!   ",self.countDeath
 
             self.ended = False
             playerObj = getPlayer(self.estadoActual)
@@ -260,6 +265,7 @@ class JuegoModelo:
 
         #Es el reward?
         reward = self.calculateReward(self.estadoActual)
+        self.score += reward
         self.observe(self.estadoAnt,self.estadoActual,self.lastAction,reward)
 
         #Aca va el observe
@@ -273,15 +279,15 @@ class JuegoModelo:
         if len(listaColisiones)>0:
             for obj in listaColisiones:
                 if obj.isComida:
-                    print "Comio una comidita"
+                    #print "Comio una comidita"
                     self.listaObstaculos.remove(obj)
                     acumulative += 1000
                 else:
-                    print "COLLISION DETECTADA"
+                    #print "COLLISION DETECTADA"
                     self.endGame()
                     acumulative += -1000
             return acumulative
-        return 0
+        return -1
     def endGame(self): #Me complico resetear el juego simplemente mantendre la transicion plana
         self.ended = True
         pass
@@ -289,7 +295,8 @@ class JuegoModelo:
         playerObj = getPlayer(estado)
 
         playerObj.changeSpeed((playerObj.velModulo*math.cos(action),playerObj.velModulo*math.sin(action)))
-        # playerObj.teleport(actionToPoint(playerObj,action,self))
+        playerObj.newAngle(action)
+        # playerObj.teleport(actionToPoint(playerObj,action))
 
 
         self.lastAction = action
@@ -366,6 +373,8 @@ class JuegoModelo:
     def legalActions(self,estado):
         jugador= getPlayer(estado)
         ponderaciones=self.CalcularPonderacion()
+        ponderaciones.append(-6)
+
         acciones=[]
         for index,angulo in enumerate(ponderaciones):
             deltaAngulo=angulo*jugador.anguloGiro
@@ -382,11 +391,16 @@ class JuegoModelo:
                 self.superestados[index]=((newX,newY))
                 acciones.append(auxangulo)
         # print "LA salidoa es ",acciones
+                if angulo == 0:
+                    jugador.setNorth((newX,newY))
+
+            else:
+                self.superestados[index]=(None)
+
+        #print "La salidoa es ",acciones,self.superestados
         if len(acciones) == 0:
             raise Exception("TIRO 0 ACCIONES");
 
-
-        #print("tttttttttt"),acciones
         return acciones
     def CalcularPonderacion(self):
-        return range(NumAccion)
+        return range(-3,4)

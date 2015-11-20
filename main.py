@@ -30,7 +30,7 @@ class JuegoVisual:
     def __init__(self,juegomodelo):
 
         #Variable prueba
-        self.modoStep = True
+        self.modoStep = False
 
         self.done = False
         self.juegomodelo = juegomodelo
@@ -60,7 +60,6 @@ class JuegoVisual:
     def drawQvalues(self):
 
         #Discretizar el grid en cuantos pasos
-
 
 
         h = 8
@@ -143,7 +142,7 @@ class JuegoVisual:
             #Elementos auxiliares
             for point in self.juegomodelo.superestados:
                 #print"pppp1",point
-                if point == None:
+                if point == None or point == 0:
                     continue
                 #print "Punto sigiente ",point
                 #print"pppp",point
@@ -160,11 +159,13 @@ class JuegoVisual:
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument(dest="nEnemies", type=int,help="Cuantos meteoros colocar", default=2, nargs='?')
-parser.add_argument(dest='feature', type=int,help="0 feature dist, 1 featuresDistBorder", default=2, nargs='?')
-parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=20, nargs='?')
+parser.add_argument(dest="nEnemies", type=int,help="Cuantos meteoros colocar", default=7, nargs='?')
+parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDist", default='foodDist', nargs='?')
+parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=40, nargs='?')
 
-parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=10000, nargs='?')
+parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
+parser.add_argument(dest='testOrVisual',help="0 test 1 visualGame", default=1, nargs='?')
+
 args = parser.parse_args()
 print args
 #Setear el juego, modelo
@@ -174,24 +175,31 @@ modeloTraining = JuegoModelo()
 
 modeloTraining.generateRandomObs(args.nEnemies)
 modeloTraining.generateRandomFoods(args.Food)
+modeloReal.generateRandomObs(args.nEnemies)
+modeloReal.generateRandomFoods(args.Food)
 
-if args.feature == 1:
-    modeloTraining.setBorderAndDistFeature()
-    modeloReal.setBorderAndDistFeature()
-elif args.feature == 2:
-    modeloTraining.setFoodFeature()
-    modeloReal.setFoodFeature()
-elif args.feature == 0:
-    modeloTraining.setJustDistFeature()
-    modeloReal.setJustDistFeature()
+modeloTraining.setFeatureArg(args.feature)
+modeloReal.setFeatureArg(args.feature)
 
 if args.training:
-    w = modeloTraining.trainModel(constTime,1000)
+    w = modeloTraining.trainModel(constTime,args.training)
+
+if args.testOrVisual == 1:
+    modeloReal.setWeight(w)
+    vista = JuegoVisual(modeloReal)
+    vista.loop()
+else:
+    modeloReal.setWeight(w)
+    modeloReal.testModel(constTime,1000)
+
+    print "Ahora con pesos aleatorios "
+
+    modeloReal.generateRandomObs(args.nEnemies)
+    modeloReal.generateRandomFoods(args.Food)
+
+    modeloReal.planner.randomWeight()
+    modeloReal.testModel(constTime,1000)
 
 
-modeloReal.generateRandomObs(args.nEnemies)
-modeloReal.generateRandomFoods(40)
-#sdfa
-modeloReal.setWeight(w)
-vista = JuegoVisual(modeloReal)
-vista.loop()
+
+
