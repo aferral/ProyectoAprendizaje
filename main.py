@@ -160,13 +160,13 @@ class JuegoVisual:
 
 parser = argparse.ArgumentParser()
 parser.add_argument(dest="nEnemies", type=int,help="Cuantos meteoros colocar", default=7, nargs='?')
-parser.add_argument(dest="persecutoresEnemies", type=int,help="Cuantos meteoros colocar", default=1, nargs='?')
+parser.add_argument(dest="persecutoresEnemies", type=int,help="Cuantos meteoros colocar", default=3, nargs='?')
 
 parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDist", default='foodDist', nargs='?')
 parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=40, nargs='?')
 
 parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
-parser.add_argument(dest='testOrVisual',help="0 test 1 visualGame", default=0, nargs='?')
+parser.add_argument(dest='testOrVisual',help="0 test 1 visualGame", default=1, nargs='?')
 
 args = parser.parse_args()
 print args

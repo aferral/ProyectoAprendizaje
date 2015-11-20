@@ -28,7 +28,7 @@ class Obstacle():
         self.radio = radio
         self.player = False
         self.isComida = False
-
+        self.isPersecutor = False
         self.northPoint = (0,0)
 
 
@@ -247,9 +247,11 @@ class JuegoModelo:
         #Hago todos lso mov
         for stalker in self.listaPersecutores:
             stalker.Perseguir(playerObj)
+            stalker.update(tiempo)
+            self.VerifyPlayer(tiempo, stalker)
 
         for elem in self.listaObstaculos:
-            if (elem.player == False) or (not(self.traspasarPared)):
+            if (elem.player == False and elem.isPersecutor == False) or (not(self.traspasarPared)):
                 elem.update(tiempo)
                 self.wallColl(elem)
 
@@ -367,6 +369,8 @@ class JuegoModelo:
         self.listaObstaculos.append(food)
     def newPersecutor(self,x,y):
         obstacle=Obstacle(30,x,y)
+        obstacle.isPersecutor = True
+        obstacle.velModulo = 3
         self.listaObstaculos.append(obstacle)
         self.listaPersecutores.append(obstacle)
 
