@@ -42,7 +42,7 @@ class Obstacle():
 
         #Variables visualizacion
         self.screen = None
-        self.color = (0,0,255)
+        self.color = (0,0,0)
 
     def setPlayer(self):
         self.player = True
@@ -154,6 +154,7 @@ class JuegoModelo:
     def setWeight(self,weight):
         self.planner.weights = weight
         self.planner.setEpsilon(0)
+        self.planner.endLearning()
 
     def setFeatureFun(self,function):
         self.featFun = function

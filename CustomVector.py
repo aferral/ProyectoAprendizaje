@@ -14,7 +14,10 @@ class VectorCustom:
     def __getitem__(self, item):
         return self.vals[int(item)]
     def __repr__(self):
-        return str(self.vals)
+        out = ''
+        for elem in self.vals:
+            out += '{0:.3f}'.format(elem)+', '
+        return out
     def __setitem__(self, key, value):
         self.vals[key] = value
     def __mul__(self, y ):

@@ -25,24 +25,14 @@ class FeatureExtractor:
                 Yaux=obj.y
                 mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
 
-        vec.add(10/(mindist))
+        vec.add(10/(mindist+0.1))
         vec.add(1)
         return vec
     def bordAndDistFeature(self,estado,accion):
 
+        vec = self.justDistFeature(estado,accion)
         playerObj = getPlayer(estado)
-        mindist = 9999
-        vec = VectorCustom()
-        distNextStep = mindist
         (FuturoX,FuturoY) = actionToPoint(playerObj,accion)
-
-        for obj in estado:
-            if obj != playerObj and obj.isComida == False:
-                Xaux=obj.x
-                Yaux=obj.y
-                mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
-
-
         #Tambien calcula la distancia al board mas cercano
         #Calcula distncias a lines que representar bordes
         #p1-----------------------------p2
@@ -71,8 +61,7 @@ class FeatureExtractor:
         # print "Distancia a Borde mas cercano ",minBor
 
         vec.add(3/(minBor+0.1))
-        vec.add(10/(mindist))
-        vec.add(1)
+
         return vec
 
     def comiditas(self,estado,accion):
@@ -86,5 +75,5 @@ class FeatureExtractor:
                 Xaux=obj.x
                 Yaux=obj.y
                 mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
-        vec.add(1/(mindist))
+        vec.add(1/(mindist+0.1))
         return vec

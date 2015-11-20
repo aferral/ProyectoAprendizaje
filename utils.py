@@ -16,3 +16,32 @@ def actionToPoint(obj,action):
     return (FuturoX,FuturoY)
 def getPlayer(estado):
     return estado[0]
+
+
+
+#Cosas para visualizacion
+
+
+def linear_gradient(n=10):
+
+  # Starting and ending colors in RGB form
+  s = (0,0,255)
+  f = (255,0,0)
+  # Initilize a list of the output colors with the starting color
+  RGB_list = [s]
+  # Calcuate a color at each evenly spaced value of t from 1 to n
+  for t in range(1, n):
+    # Interpolate RGB vector for color at the current value of t
+    curr_vector = [
+      int(s[j] + (float(t)/(n-1))*(f[j]-s[j]))
+      for j in range(3)
+    ]
+    # Add it to our list of output colors
+    RGB_list.append(curr_vector)
+
+  return RGB_list
+
+def calculaColor(minval,maxval,value,lista):
+    intervalo = (maxval-minval)*1.0/(len(lista))
+    bin = int(math.floor((value-minval-1) / intervalo))
+    return lista[bin]

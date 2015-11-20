@@ -1,7 +1,9 @@
+import copy
 from Model import JuegoModelo
 import sys
 import argparse
 import pygame
+from utils import *
 __author__ = 'aferral'
 
 
@@ -48,13 +50,70 @@ class JuegoVisual:
         pygame.draw.line(self.screen, (0,255,0), self.juegomodelo.p4, self.juegomodelo.p1)
         pass
 
+    """ Importante esta es una visualizacion solamente de los Qvalues
+        respecto a la posicion del jugador manteniendo todos los demas
+        parametros constantes. Ademas puede tener probleams de visualizacion
+        respecto a las funciones discontinuas ya que no puede considerar
+        todos lso punts que se implemeten en las distintas
+        features usarla con cuidado.
+    """
+    def drawQvalues(self):
+
+        #Discretizar el grid en cuantos pasos
+
+
+
+        h = 30
+        listaPoints = [0 for j in range(h*h)]
+
+        matrix = [[copy.deepcopy(self.juegomodelo.estadoActual) for j in range(h)] for i in range(h)]
+
+        import time
+        startTime = time.time()
+        stepX = (self.juegomodelo.dim[0]-10) * 1.0 / h
+        stepY = (self.juegomodelo.dim[1]-10) * 1.0 / h
+
+
+        listaColores = linear_gradient(20)
+
+        for index in range(h*h):
+                i = index / h
+                j = index % h
+                (xcord,ycord) = (stepX * i,stepY*j)
+
+                estado = matrix[i][j]
+                jug = getPlayer(estado)
+                jug.teleport((xcord,ycord))
+                valPoint = self.juegomodelo.planner.getMaxQValue(estado)
+                listaPoints[i*h+j] = valPoint
+
+        minval = min(listaPoints)
+        maxval = max(listaPoints)
+        for index,value in enumerate(listaPoints):
+            i = index / h
+            j = index % h
+            (xcord,ycord) = (stepX * i,stepY*j)
+            color = calculaColor(minval,maxval,value,listaColores)
+            pygame.draw.rect(self.screen,color,
+                                  (int(xcord)-stepX*0.5,int(ycord)-stepY*0.5,int(xcord)+stepX*0.5,int(ycord)+stepY*0.5)
+                                  ,0)
+        print "Tomo ",time.time()-startTime
+        far = pygame.font.SysFont("comicsansms", 12)
+        text = far.render("Weight "+str(self.juegomodelo.planner.weights), True, (0, 0, 0))
+        self.screen.blit(text, (20, 20))
+        pass
 
     def loop(self):
 
         while not self.done:
+            # Clear the screen
+            self.screen.fill(WHITE)
 
             if self.modoStep:
                 raw_input()
+                #Aca dibujar mapa de features
+                self.drawQvalues()
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.done = True
@@ -74,8 +133,7 @@ class JuegoVisual:
                         self.juegomodelo.listaObstaculos[1].changeSpeed((0,1))
 
                         pygame.display.flip()
-            # Clear the screen
-            self.screen.fill(WHITE)
+
             listaObjetos = self.juegomodelo.listaObstaculos
             self.juegomodelo.updateGame(constTime)
             for elem in listaObjetos:
@@ -102,10 +160,10 @@ class JuegoVisual:
 
 parser = argparse.ArgumentParser()
 parser.add_argument(dest="nEnemies", type=int,help="Cuantos meteoros colocar", default=2, nargs='?')
-parser.add_argument(dest='feature', type=int,help="0 feature dist, 1 featuresDistBorder", default=1, nargs='?')
+parser.add_argument(dest='feature', type=int,help="0 feature dist, 1 featuresDistBorder", default=2, nargs='?')
 parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=20, nargs='?')
 
-parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
+parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=10000, nargs='?')
 args = parser.parse_args()
 print args
 #Setear el juego, modelo

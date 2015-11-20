@@ -20,6 +20,8 @@ class AproximateQAgent:
 
     def setEpsilon(self,val):
         self.epsilon = val
+    def endLearning(self):
+        self.alpha = 0
     def getWeights(self):
         return self.weights
 
