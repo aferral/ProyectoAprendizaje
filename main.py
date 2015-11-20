@@ -191,7 +191,7 @@ if args.training:
 
 modeloReal.generateRandomObs(args.nEnemies)
 modeloReal.generateRandomFoods(40)
-
+#sdfa
 modeloReal.setWeight(w)
 vista = JuegoVisual(modeloReal)
 vista.loop()
