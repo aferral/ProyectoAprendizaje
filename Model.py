@@ -9,6 +9,15 @@ import copy
 from utils import *
 __author__ = 'aferral'
 
+plot = True
+
+try:
+    import matplotlib.pyplot as plt
+except Exception,e :
+    print "Error al conseguir matplotlib.pyplot no ploteare solo imprimire"
+    plot = False
+
+
 
 NumAccion=30
 margin = 20
@@ -171,12 +180,41 @@ class JuegoModelo:
 
         return self.planner.weights
 
+    def experiment(self,constTime):
+        #Genera lista de numero de iteraciones de entrenamiento
+        nTrain = [0,1,10,100,1000,10000,100000]
+        allTheScores = []
+        
+        #Cuanto debe durar el juego en que se prueba (iteraciones)
+        iteracionesTest = 1000000
+        
+        #Cuantas veces se vuelve a probar un par (nTrain,ItearcionTest) para sacar el valro promedio
+        repe = 10
+        
+        for iteracionTrain in nTrain:
+            #Entrena con iteracionTrain
+            trainModel(constTime,iteracionTrain)
+            averageScore = 0
+            for i in range(repe):
+                averageScore += testModel(constTime,iteracionesTest)
+            averageScore /= repe
+            allTheScores.append(averageScore)
+        #Plotea que las iteracionse de entrenamiento y el scorePromedio obtenido
+        
+        if (plot):
+            plot(nTrain,allTheScores)
+        else:
+            print nTrain
+            print allTheScores
+        
+
     def testModel(self,constTime,iterations):
         print "Starting test of ",iterations
         print "Weights ",self.planner.weights
         for i in range(iterations):
             self.updateGame(constTime)
         print "Traing has ended el score es ",self.score
+        return self.score
         pass
 
     def validateModel(self):
