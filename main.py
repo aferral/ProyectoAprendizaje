@@ -6,10 +6,100 @@ import pygame
 from utils import *
 __author__ = 'aferral'
 
+plotPosible = True
+
+try:
+    import matplotlib.pyplot as plt
+except Exception,e :
+    print "Error al conseguir matplotlib.pyplot no ploteare solo imprimire"
+    plotPosible = False
 
 #Generar modo debug con grideo
 
-#Iteraciones modo antes de probar
+#Fabrica de juegos
+def fabricaJuego(args):
+
+    nuevoJuego = JuegoModelo()
+
+    nuevoJuego.generateRandomObs(args.nEnemies)
+    nuevoJuego.generateRandomFoods(args.Food)
+    nuevoJuego.generateRandomPersecutor(args.persecutoresEnemies)
+
+    nuevoJuego.setFeatureArg(args.feature)
+
+    if args.training:
+        trainModel(nuevoJuego,constTime,args.training)
+    return nuevoJuego
+
+
+#Def functiones de entrenamiento y prueba
+
+def trainModel(juego,constTime,iterations):
+    print "Starting training of ",iterations
+    print "Weights ",juego.planner.weights
+    juego.planner.setEpsilon(0.8)
+    for i in range(iterations):
+        juego.updateGame(constTime)
+    juego.planner.setEpsilon(0)
+    print "Traing has ended ",juego.planner.weights
+
+    return juego.planner.weights
+
+def experiment(constTime,args):
+    #Genera lista de numero de iteraciones de entrenamiento
+    nTrain = [0, 1, 10, 100, 1000]
+    allTheScores = []
+
+    #Cuanto debe durar el juego en que se prueba (iteraciones)
+    iteracionesTest = 100
+
+    #Cuantas veces se vuelve a probar un par (nTrain,ItearcionTest) para sacar el valro promedio
+    repe = 10
+
+    for iteracionTrain in nTrain:
+        #Entrena con iteracionTrain entrenamiento dentro de fabrica
+        print "Comienzan experimentos con iteracionesTrain ",iteracionTrain
+        argTrain= args
+        argTrain.training = iteracionTrain
+        modeloPruebas = fabricaJuego(argTrain)
+
+        weightTrained = modeloPruebas.planner.weights
+        argNoTrain = args
+        argNoTrain.training = 0
+
+        averageScore = 0
+        for i in range(repe):
+            nuevoTest = fabricaJuego(argNoTrain)
+            nuevoTest.setWeight(weightTrained)
+            averageScore += testModel(nuevoTest,constTime,iteracionesTest)
+        averageScore /= repe
+        print "Acabo de terminar de probar el modelo con ",iteracionTrain," iteraciones "," con un score de ",averageScore
+        allTheScores.append(averageScore)
+    #Plotea que las iteracionse de entrenamiento y el scorePromedio obtenido
+
+    if (plotPosible):
+        plt.plot(nTrain,allTheScores,'*')
+        plt.show()
+
+    print "Resultados "
+    print nTrain
+    print allTheScores
+
+
+def testModel(juego,constTime,iterations):
+    print "Starting test of ",iterations
+    print "Weights ",juego.planner.weights
+    decim = 1 + iterations / 100.0
+    for i in range(iterations):
+        if i % decim == 0:
+            print "Test en ",(i*100.0/iterations)
+        juego.updateGame(constTime)
+    print "Traing has ended el score es ",juego.score
+    return juego.score
+    pass
+
+def validateModel(self):
+    pass
 
 
 #Todo Separar el fin de juego del juego, si se acaba el juego tirar el main dneuvo (guardando weights(
@@ -102,8 +192,13 @@ class JuegoVisual:
         self.screen.blit(text, (20, 20))
         pass
 
-    def loop(self):
+    def movePlayer(self,deltaAng):
+        playerObj = getPlayer(self.juegomodelo.estadoActual)
+        playerObj.moveAngle(deltaAng)
+        pass
 
+    def loop(self):
+        difAngul = 0
         while not self.done:
             # Clear the screen
             self.screen.fill(WHITE)
@@ -113,27 +208,25 @@ class JuegoVisual:
                 #Aca dibujar mapa de features
                 self.drawQvalues()
 
-            control = 1
+            control = 0
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.done = True
+                if event.type == KEYUP:
+                    difAngul = 0
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
                         print "Izq"
-                        self.juegomodelo.listaObstaculos[control].changeSpeed((-1,0))
-
+                        difAngul = 0.1
                     if event.key == pygame.K_RIGHT:
                         print "Derecha"
-                        self.juegomodelo.listaObstaculos[control].changeSpeed((1,0))
+                        difAngul = -0.1
                     if event.key == pygame.K_UP:
                         print "Arriba"
-                        self.juegomodelo.listaObstaculos[control].changeSpeed((0,-1))
                     if event.key == pygame.K_DOWN:
                         print "Down"
-                        self.juegomodelo.listaObstaculos[control].changeSpeed((0,1))
-
                         pygame.display.flip()
-
+            self.movePlayer(difAngul)
             listaObjetos = self.juegomodelo.listaObstaculos
             self.juegomodelo.updateGame(constTime)
             for elem in listaObjetos:
@@ -166,45 +259,29 @@ parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDis
 parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=40, nargs='?')
 
 parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
-parser.add_argument(dest='testOrVisual',help="0 test 1 visualGame", default=1, nargs='?')
+parser.add_argument(dest='ExpOrRun',help="0 test 1 visualGame", default=1, nargs='?')
 
 args = parser.parse_args()
 print args
 #Setear el juego, modelo
 
-modeloReal = JuegoModelo()
-modeloTraining = JuegoModelo()
 
-modeloTraining.generateRandomObs(args.nEnemies)
-modeloTraining.generateRandomFoods(args.Food)
-modeloReal.generateRandomObs(args.nEnemies)
-modeloReal.generateRandomFoods(args.Food)
-modeloReal.generateRandomPersecutor(args.persecutoresEnemies)
+#Crea modelo segun parametros (puede ser necesario entrenarlo)
 
 
-modeloTraining.setFeatureArg(args.feature)
-modeloReal.setFeatureArg(args.feature)
+#Debe ser necesario crear pesos aleatorios
 
-if args.training:
-    w = modeloTraining.trainModel(constTime,args.training)
 
-if args.testOrVisual == 1:
-    modeloReal.setWeight(w)
+#SI es 1 se juega con modo normal visual
+if args.ExpOrRun == 1:
+    modeloReal = fabricaJuego(args)
     vista = JuegoVisual(modeloReal)
     vista.loop()
-else:
-    modeloReal.setWeight(w)
-    modeloReal.testModel(constTime,1000)
+else: #De lo contrario se coloca en modo experimento que hace sin interfaz grafica
+    experiment(constTime,args)
 
-    print "Ahora con pesos aleatorios "
-    modeloReal = JuegoModelo()
-    modeloReal.generateRandomObs(args.nEnemies)
-    modeloReal.generateRandomPersecutor(args.persecutoresEnemies)
-    modeloReal.generateRandomFoods(args.Food)
-    modeloReal.setFeatureArg(args.feature)
 
-    modeloReal.planner.randomWeight()
-    modeloReal.testModel(constTime,1000)
+
 
 
 

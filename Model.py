@@ -9,16 +9,6 @@ import copy
 from utils import *
 __author__ = 'aferral'
 
-plot = True
-
-try:
-    import matplotlib.pyplot as plt
-except Exception,e :
-    print "Error al conseguir matplotlib.pyplot no ploteare solo imprimire"
-    plot = False
-
-
-
 NumAccion=30
 margin = 20
 
@@ -63,6 +53,11 @@ class Obstacle():
     def teleport(self,point):
         self.x = point[0]
         self.y = point[1]
+
+    def moveAngle(self,deltaAngle):
+        angle = self.anguloAct + deltaAngle
+        self.changeSpeed((self.velModulo*math.cos(angle),self.velModulo*math.sin(angle)))
+        self.newAngle(angle)
 
     def changeSpeed(self,velTuple):
         self.velX = velTuple[0]
@@ -137,6 +132,7 @@ class JuegoModelo:
         self.borders2 = [0,width,heigth,0   ]
         self.dim = (width,heigth)
 
+        #TODO ERRROR ACA NO FUNCIONA COMO DEBERIA
         self.traspasarPared= True;
 
         self.p1 = (self.borders[0],self.borders[2])
@@ -167,57 +163,6 @@ class JuegoModelo:
                         'foodDist'      :   (self.features.comiditas,4)}
 
 
-        pass
-
-    def trainModel(self,constTime,iterations):
-        print "Starting training of ",iterations
-        print "Weights ",self.planner.weights
-        self.planner.setEpsilon(0.8)
-        for i in range(iterations):
-            self.updateGame(constTime)
-        self.planner.setEpsilon(0)
-        print "Traing has ended ",self.planner.weights
-
-        return self.planner.weights
-
-    def experiment(self,constTime):
-        #Genera lista de numero de iteraciones de entrenamiento
-        nTrain = [0,1,10,100,1000,10000,100000]
-        allTheScores = []
-        
-        #Cuanto debe durar el juego en que se prueba (iteraciones)
-        iteracionesTest = 1000000
-        
-        #Cuantas veces se vuelve a probar un par (nTrain,ItearcionTest) para sacar el valro promedio
-        repe = 10
-        
-        for iteracionTrain in nTrain:
-            #Entrena con iteracionTrain
-            trainModel(constTime,iteracionTrain)
-            averageScore = 0
-            for i in range(repe):
-                averageScore += testModel(constTime,iteracionesTest)
-            averageScore /= repe
-            allTheScores.append(averageScore)
-        #Plotea que las iteracionse de entrenamiento y el scorePromedio obtenido
-        
-        if (plot):
-            plot(nTrain,allTheScores)
-        else:
-            print nTrain
-            print allTheScores
-        
-
-    def testModel(self,constTime,iterations):
-        print "Starting test of ",iterations
-        print "Weights ",self.planner.weights
-        for i in range(iterations):
-            self.updateGame(constTime)
-        print "Traing has ended el score es ",self.score
-        return self.score
-        pass
-
-    def validateModel(self):
         pass
 
 
@@ -315,7 +260,7 @@ class JuegoModelo:
         self.observe(self.estadoAnt,self.estadoActual,self.lastAction,reward)
 
         #Aca va el observe
-        self.doAction(self.estadoActual,self.planner.getBestAction(self.estadoActual))
+        #self.doAction(self.estadoActual,self.planner.getBestAction(self.estadoActual))
         pass
     def calculateReward(self,estado):
         acumulative=0
