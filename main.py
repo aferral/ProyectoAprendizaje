@@ -47,7 +47,7 @@ def trainModel(juego,constTime,iterations):
 
 def experiment(constTime,args):
     #Genera lista de numero de iteraciones de entrenamiento
-    nTrain = [0, 1, 10, 100, 1000]
+    nTrain = [0, 1, 10, 20, 50,80,100,200,300,400,500,600,700,800,900,1000]
     allTheScores = []
 
     #Cuanto debe durar el juego en que se prueba (iteraciones)
@@ -78,7 +78,7 @@ def experiment(constTime,args):
     #Plotea que las iteracionse de entrenamiento y el scorePromedio obtenido
 
     if (plotPosible):
-        plt.plot(nTrain,allTheScores,'*')
+        plt.plot(nTrain,allTheScores,'*--')
         plt.show()
 
     print "Resultados "
@@ -227,9 +227,10 @@ class JuegoVisual:
                         print "Down"
                         pygame.display.flip()
             self.movePlayer(difAngul)
-            listaObjetos = self.juegomodelo.listaObstaculos
+            listaObjetos = self.juegomodelo.estadoActual
             self.juegomodelo.updateGame(constTime)
             for elem in listaObjetos:
+                elem.setDraw(self.screen)
                 elem.draw()
 
             #Elementos auxiliares
@@ -258,8 +259,8 @@ parser.add_argument(dest="persecutoresEnemies", type=int,help="Cuantos meteoros 
 parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDist", default='foodDist', nargs='?')
 parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=40, nargs='?')
 
-parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
-parser.add_argument(dest='ExpOrRun',help="0 test 1 visualGame", default=1, nargs='?')
+parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=0, nargs='?')
+parser.add_argument(dest='ExpOrRun',help="0 experiment,  1 visualGame, 2 jugar desde 0", default=2, nargs='?')
 
 args = parser.parse_args()
 print args
@@ -275,6 +276,14 @@ print args
 #SI es 1 se juega con modo normal visual
 if args.ExpOrRun == 1:
     modeloReal = fabricaJuego(args)
+    vista = JuegoVisual(modeloReal)
+    vista.loop()
+
+elif  args.ExpOrRun == 2:
+    args.training = 0
+    modeloReal = fabricaJuego(args)
+    modeloReal.planner.setEpsilon(0.2)
+    modeloReal.planner.alpha = 0.4
     vista = JuegoVisual(modeloReal)
     vista.loop()
 else: #De lo contrario se coloca en modo experimento que hace sin interfaz grafica

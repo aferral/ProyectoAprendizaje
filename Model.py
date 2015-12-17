@@ -1,5 +1,5 @@
 import pygame
-from random import randint
+from random import randint, random
 from CustomVector import VectorCustom
 from Features import FeatureExtractor
 from QlearningAgent import AproximateQAgent
@@ -64,6 +64,8 @@ class Obstacle():
         self.velY = velTuple[1]
 
     def Perseguir(self, objbueno):
+        if (objbueno.x-self.x) == 0 :
+            return
         self.anguloAct = math.atan((objbueno.y-self.y)/(objbueno.x-self.x))
         self.velY = math.sin(self.anguloAct)*self.velModulo
         self.velX = math.cos(self.anguloAct)*self.velModulo
@@ -107,6 +109,7 @@ class JuegoModelo:
     def __init__(self):
 
 
+        self.probSpawn = 0.03
 
         #Variables del modelo
         self.countDeath = 0
@@ -154,7 +157,7 @@ class JuegoModelo:
 
         playerObj.setPlayer()
 
-        self.listaObstaculos.append(playerObj)
+        self.estadoActual.append(playerObj)
         self.superestados=[0 for i in range(NumAccion)]
 
         #features y sus dimensiones
@@ -221,7 +224,10 @@ class JuegoModelo:
         self.iteraciones += 1
         # print self.iteraciones
 
-        self.estadoAnt = copy.deepcopy(self.listaObstaculos)
+        if random() < self.probSpawn:
+            self.generateRandomFoods(1)
+
+        self.estadoAnt = copy.deepcopy(self.estadoActual)
 
         playerObj = getPlayer(self.estadoActual)
         playerObj.update(tiempo)
@@ -233,14 +239,14 @@ class JuegoModelo:
             stalker.update(tiempo)
             self.VerifyPlayer(tiempo, stalker)
 
-        for elem in self.listaObstaculos:
+        for elem in self.estadoActual:
             if (elem.player == False and elem.isPersecutor == False) or (not(self.traspasarPared)):
                 elem.update(tiempo)
                 self.wallColl(elem)
 
 
         #Setear estado actual y ant
-        self.estadoActual = self.listaObstaculos
+        self.estadoActual = self.estadoActual
 
 
         if self.ended:
@@ -260,7 +266,7 @@ class JuegoModelo:
         self.observe(self.estadoAnt,self.estadoActual,self.lastAction,reward)
 
         #Aca va el observe
-        #self.doAction(self.estadoActual,self.planner.getBestAction(self.estadoActual))
+        self.doAction(self.estadoActual,self.planner.getBestAction(self.estadoActual))
         pass
     def calculateReward(self,estado):
         acumulative=0
@@ -271,7 +277,7 @@ class JuegoModelo:
             for obj in listaColisiones:
                 if obj.isComida:
                     #print "Comio una comidita"
-                    self.listaObstaculos.remove(obj)
+                    self.estadoActual.remove(obj)
                     acumulative += 1000
                 else:
                     #print "COLLISION DETECTADA"
@@ -330,7 +336,7 @@ class JuegoModelo:
 
     def colision(self,obj1):
         lista = []
-        for obj in self.listaObstaculos:
+        for obj in self.estadoActual:
             if (d(obj1,obj) < (obj1.radio + obj.radio) and obj1 != obj):
               #  print "COLLIDE"
                 lista.append(obj)
@@ -340,7 +346,7 @@ class JuegoModelo:
         pass
     def newObstacle(self,x,y):
         obstacle=Obstacle(30,x,y)
-        self.listaObstaculos.append(obstacle)
+        self.estadoActual.append(obstacle)
         pass
     def newFood(self,x,y):
         food=Obstacle(7,x,y)
@@ -349,12 +355,12 @@ class JuegoModelo:
         food.velY = 0
         food.changeSpeed((0,0))
         food.isComida=True
-        self.listaObstaculos.append(food)
+        self.estadoActual.append(food)
     def newPersecutor(self,x,y):
         obstacle=Obstacle(30,x,y)
         obstacle.isPersecutor = True
         obstacle.velModulo = 3
-        self.listaObstaculos.append(obstacle)
+        self.estadoActual.append(obstacle)
         self.listaPersecutores.append(obstacle)
 
 
