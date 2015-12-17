@@ -19,8 +19,11 @@ class AproximateQAgent:
         self.epsilon =0.4
 
     def randomWeight(self):
+        temp = VectorCustom()
         for val in self.weights:
-            val = random.randint(-100,100)
+            #temp.add(random.random())
+            temp.add(random.randint(-100,100))
+        self.weights = temp
     def setEpsilon(self,val):
         self.epsilon = val
     def endLearning(self):

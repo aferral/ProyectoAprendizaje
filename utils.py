@@ -70,6 +70,6 @@ def linear_gradient(n=10):
   return RGB_list
 
 def calculaColor(minval,maxval,value,lista):
-    intervalo = (maxval-minval)*1.0/(len(lista))
+    intervalo = 0.1+(maxval-minval)*1.0/(len(lista))
     bin = int(math.floor((value-minval-1) / intervalo))
     return lista[bin]

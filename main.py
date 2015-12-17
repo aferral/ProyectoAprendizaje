@@ -41,6 +41,7 @@ def trainModel(juego,constTime,iterations):
     for i in range(iterations):
         juego.updateGame(constTime)
     juego.planner.setEpsilon(0)
+    juego.planner.endLearning()
     print "Traing has ended ",juego.planner.weights
 
     return juego.planner.weights
@@ -187,9 +188,7 @@ class JuegoVisual:
                                   (int(xcord)-stepX*0.5,int(ycord)-stepY*0.5,int(xcord)+stepX*0.5,int(ycord)+stepY*0.5)
                                   ,0)
         print "Tomo ",time.time()-startTime
-        far = pygame.font.SysFont("comicsansms", 12)
-        text = far.render("Weight "+str(self.juegomodelo.planner.weights), True, (0, 0, 0))
-        self.screen.blit(text, (20, 20))
+
         pass
 
     def movePlayer(self,deltaAng):
@@ -246,6 +245,15 @@ class JuegoVisual:
             # Limit to X frames per second
             self.clock.tick(fps)
 
+            far = pygame.font.SysFont("comicsansms", 12)
+            text = far.render("Weight "+str(self.juegomodelo.planner.weights), True, (0, 0, 0))
+            self.screen.blit(text, (20, 20))
+
+            text = far.render("Deaths "+str(self.juegomodelo.countDeath), True, (0, 0, 0))
+            self.screen.blit(text, (500, 20))
+
+            text = far.render("Score "+str(self.juegomodelo.score), True, (0, 0, 0))
+            self.screen.blit(text, (600, 20))
             # Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
 
@@ -259,7 +267,7 @@ parser.add_argument(dest="persecutoresEnemies", type=int,help="Cuantos meteoros 
 parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDist", default='foodDist', nargs='?')
 parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=40, nargs='?')
 
-parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=0, nargs='?')
+parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
 parser.add_argument(dest='ExpOrRun',help="0 experiment,  1 visualGame, 2 jugar desde 0", default=2, nargs='?')
 
 args = parser.parse_args()
@@ -282,8 +290,11 @@ if args.ExpOrRun == 1:
 elif  args.ExpOrRun == 2:
     args.training = 0
     modeloReal = fabricaJuego(args)
+    #Funciona bien con 0.2 epslion 0.4 alpha
+    #modeloReal.planner.randomWeight()
     modeloReal.planner.setEpsilon(0.2)
     modeloReal.planner.alpha = 0.4
+
     vista = JuegoVisual(modeloReal)
     vista.loop()
 else: #De lo contrario se coloca en modo experimento que hace sin interfaz grafica
