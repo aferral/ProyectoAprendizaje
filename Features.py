@@ -3,21 +3,30 @@ from utils import *
 
 __author__ = 'aferral'
 
-class FeatureExtractor:
+class Feature:
+
     def __init__(self,modelo):
         self.p1 = modelo.p1
         self.p2 = modelo.p2
         self.p3 = modelo.p3
         self.p4 = modelo.p4
-
         self.modelo=modelo
+        self.descriptor = []
+        self.vector = VectorCustom()
+
+    def getValue(self,estado,accion):
+        raise NotImplemented
+
+class justDistFeature(Feature):
+
+    def __init__(self,modelo):
+        Feature.__init__(self,modelo)
+        self.descriptor = ["distObs","bias"]
 
 
-    def justDistFeature(self,estado,accion):
+    def getValue(self,estado,accion):
         playerObj = getPlayer(estado)
         mindist = 9999
-        vec = VectorCustom()
-        distNextStep = mindist
         (FuturoX,FuturoY) = actionToPoint(playerObj,accion,self.modelo)
 
         for obj in estado:
@@ -26,12 +35,18 @@ class FeatureExtractor:
                 Yaux=obj.y
                 mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
 
-        vec.add(10/(mindist+0.1))
-        vec.add(1)
-        return vec
-    def bordAndDistFeature(self,estado,accion):
+        self.vector.add("distObs",10/(mindist+0.1))
+        self.vector.add("bias",1)
+        return self.vector
 
-        vec = self.justDistFeature(estado,accion)
+class bordAndDistFeature(Feature):
+
+    def __init__(self,modelo):
+        Feature.__init__(self,modelo)
+        self.descriptor = ["minDistBord","distObs","bias"]
+    def getValue(self,estado,accion):
+
+        self.vector = justDistFeature(self.modelo).getValue(estado,accion)
         playerObj = getPlayer(estado)
         (FuturoX,FuturoY) = actionToPoint(playerObj,accion,self.modelo)
         #Tambien calcula la distancia al board mas cercano
@@ -61,12 +76,16 @@ class FeatureExtractor:
         minBor = min(distC1,distC2,distC3,distC4)
         # print "Distancia a Borde mas cercano ",minBor
 
-        vec.add(1/(minBor+0.1))
+        self.vector.add("minDistBord",1/(minBor+0.1))
 
-        return vec
+        return self.vector
 
-    def comiditas(self,estado,accion):
-        vec = self.bordAndDistFeature(estado,accion)
+class comiditas(Feature):
+    def __init__(self,modelo):
+        Feature.__init__(self,modelo)
+        self.descriptor = ["minDistFood","minDistBord","distObs","bias"]
+    def getValue(self,estado,accion):
+        self.vector = bordAndDistFeature(self.modelo).getValue(estado,accion)
         playerObj = getPlayer(estado)
         mindist = 9999
         (FuturoX,FuturoY) = actionToPoint(playerObj,accion,self.modelo)
@@ -76,11 +95,16 @@ class FeatureExtractor:
                 Xaux=obj.x
                 Yaux=obj.y
                 mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
-        vec.add(1/(mindist+0.1))
-        return vec
+        self.vector.add("minDistFood",1/(mindist+0.1))
+        return self.vector
 
-    def featPerse(self,estado,accion):
-        vec = self.bordAndDistFeature(estado,accion)
+class perseFeature(Feature):
+
+    def __init__(self,modelo):
+        Feature.__init__(self,modelo)
+        self.descriptor = ["perseDist","minDistFood","minDistBord","distObs","bias"]
+    def getValue(self,estado,accion):
+        self.vector = comiditas(self.modelo).getValue(estado,accion)
         playerObj = getPlayer(estado)
         mindist = 9999
         (FuturoX,FuturoY) = actionToPoint(playerObj,accion,self.modelo)
@@ -90,5 +114,5 @@ class FeatureExtractor:
                 Xaux=obj.x
                 Yaux=obj.y
                 mindist=min(mindist,distance(FuturoX,FuturoY,Xaux,Yaux))
-        vec.add(1/(mindist+0.1))
-        return vec
+        self.vector.add("perseDist",1/(mindist+0.1))
+        return self.vector

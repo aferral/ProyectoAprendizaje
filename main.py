@@ -28,7 +28,20 @@ def fabricaJuego(args):
     nuevoJuego.setFeatureArg(args.feature)
 
     if args.training:
-        trainModel(nuevoJuego,constTime,args.training)
+        trainGame = JuegoModelo()
+
+        trainGame.generateRandomObs(args.nEnemies)
+        trainGame.generateRandomFoods(args.Food)
+        trainGame.generateRandomPersecutor(args.persecutoresEnemies)
+
+        trainGame.setFeatureArg(args.feature)
+
+        trainedPlanner = trainModel(trainGame,constTime,args.training)
+
+        nuevoJuego.planner.setWeight(trainedPlanner)
+
+
+
     return nuevoJuego
 
 
@@ -44,7 +57,7 @@ def trainModel(juego,constTime,iterations):
     juego.planner.endLearning()
     print "Traing has ended ",juego.planner.weights
 
-    return juego.planner.weights
+    return juego.planner
 
 def experiment(constTime,args):
     #Genera lista de numero de iteraciones de entrenamiento
@@ -71,7 +84,8 @@ def experiment(constTime,args):
         averageScore = 0
         for i in range(repe):
             nuevoTest = fabricaJuego(argNoTrain)
-            nuevoTest.setWeight(weightTrained)
+            print "pesos de entrenamiento ",weightTrained
+            nuevoTest.planner.setWeight(modeloPruebas.planner)
             averageScore += testModel(nuevoTest,constTime,iteracionesTest)
         averageScore /= repe
         print "Acabo de terminar de probar el modelo con ",iteracionTrain," iteraciones "," con un score de ",averageScore
@@ -260,15 +274,18 @@ class JuegoVisual:
         pygame.quit()
 
 
+#Mejor desempeno con 1000 training red neuronal en modo de pre-test
 parser = argparse.ArgumentParser()
 parser.add_argument(dest="nEnemies", type=int,help="Cuantos meteoros colocar", default=7, nargs='?')
 parser.add_argument(dest="persecutoresEnemies", type=int,help="Cuantos meteoros colocar", default=3, nargs='?')
 
-parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDist", default='foodDist', nargs='?')
+parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDist", default='justDist', nargs='?')
 parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=40, nargs='?')
 
 parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
-parser.add_argument(dest='ExpOrRun',help="0 experiment,  1 visualGame, 2 jugar desde 0", default=2, nargs='?')
+parser.add_argument(dest='ExpOrRun',help="0 experiment,  1 visualGame, 2 jugar desde 0", default=0, nargs='?')
+
+parser.add_argument(dest='debugGrap',help="0 False,  1 True", default=0, nargs='?')
 
 args = parser.parse_args()
 print args
@@ -285,17 +302,19 @@ print args
 if args.ExpOrRun == 1:
     modeloReal = fabricaJuego(args)
     vista = JuegoVisual(modeloReal)
+    vista.modoStep = int(args.debugGrap)
     vista.loop()
 
 elif  args.ExpOrRun == 2:
     args.training = 0
     modeloReal = fabricaJuego(args)
     #Funciona bien con 0.2 epslion 0.4 alpha
-    #modeloReal.planner.randomWeight()
+    modeloReal.planner.randomWeight()
     modeloReal.planner.setEpsilon(0.2)
     modeloReal.planner.alpha = 0.4
 
     vista = JuegoVisual(modeloReal)
+    vista.modoStep = int(args.debugGrap)
     vista.loop()
 else: #De lo contrario se coloca en modo experimento que hace sin interfaz grafica
     experiment(constTime,args)

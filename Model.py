@@ -1,8 +1,8 @@
 import pygame
 from random import randint, random
 from CustomVector import VectorCustom
-from Features import FeatureExtractor
-from QlearningAgent import AproximateQAgent
+from Features import *
+from QlearningAgent import AproximateQAgent, NeuronalQAgentOnline
 import math
 import copy
 
@@ -17,6 +17,10 @@ class Obstacle():
 
     def __init__(self,radio,x,y):
         #Variables modelo
+
+        #Tipos 1 obstaculo 0 player 2 comida 3 persecutor
+        self.tipo = 1
+
         self.velX = 2
         self.velY = 2
         self.velModulo=5
@@ -45,6 +49,7 @@ class Obstacle():
         self.color = (0,0,0)
 
     def setPlayer(self):
+        self.tipo = 0
         self.player = True
         self.color = (255,0,0)
         self.radio = 5
@@ -125,7 +130,8 @@ class JuegoModelo:
         self.lastAction = 0
         self.lastRew = 0
 
-        self.planner = AproximateQAgent(self)
+        self.planner = AproximateQAgent()
+        #self.planner = NeuronalQAgentOnline()
 
         #Cosas de bordes
         width = 800
@@ -144,7 +150,7 @@ class JuegoModelo:
         self.p4 = (self.borders[1],self.borders[2])
 
         #Features
-        self.features = FeatureExtractor(self)
+        self.features = Feature(self)
 
         self.featFun = None
         self.ended = False
@@ -161,18 +167,15 @@ class JuegoModelo:
         self.superestados=[0 for i in range(NumAccion)]
 
         #features y sus dimensiones
-        self.dictFeatures = {'justDist'      :   (self.features.justDistFeature,2),
-                        'borderDist'    :   (self.features.bordAndDistFeature,3),
-                        'foodDist'      :   (self.features.comiditas,4)}
+        self.dictFeatures = {'justDist'      :   (justDistFeature(self),2),
+                        'borderDist'    :   (bordAndDistFeature(self),3),
+                        'foodDist'      :   (comiditas(self),4)}
 
 
         pass
 
 
-    def setWeight(self,weight):
-        self.planner.weights = weight
-        self.planner.setEpsilon(0)
-        self.planner.endLearning()
+
     def VerifyPlayer(self,time,obj):
         for i in range(4):
             # bla = [self.borders[2],self.borders[3],self.borders[0],self.borders[1]]
@@ -198,26 +201,22 @@ class JuegoModelo:
         # exit(1)
 
     def setFeatureArg(self,key):
-        print "Colocando features ",key
-        protoWeight = VectorCustom()
+        print "Colocando features ",key,self.dictFeatures[key]
         (function,dimension) = self.dictFeatures[key]
-        for elem in range(dimension):
-            protoWeight.add(0)
-        self.planner.weights = protoWeight
-        self.setFeatureFun(function)
 
+
+        self.setFeatureFun(function)
+        self.planner.configure(self,dimension)
 
         pass
 
 
-    def setFeatureFun(self,function):
-        self.featFun = function
+    def setFeatureFun(self,objeto):
+        self.featFun = objeto
 
-    def setFeatureFun(self,function):
-        self.featFun = function
 
     def getFeatures(self,estado,accion):
-        return self.featFun(estado,accion)
+        return self.featFun.getValue(estado,accion)
 
 
     def updateGame(self,tiempo):
@@ -248,7 +247,6 @@ class JuegoModelo:
         #Setear estado actual y ant
         self.estadoActual = self.estadoActual
 
-
         if self.ended:
             self.countDeath += 1
             #print "!!!!!!!!!!!!!!! Me mori !!!!!!!!!!!   ",self.countDeath
@@ -278,11 +276,11 @@ class JuegoModelo:
                 if obj.isComida:
                     #print "Comio una comidita"
                     self.estadoActual.remove(obj)
-                    acumulative += 1000
+                    acumulative += 20
                 else:
                     #print "COLLISION DETECTADA"
                     self.endGame()
-                    acumulative += -1000
+                    acumulative += -50
             return acumulative
         return -1
     def endGame(self): #Me complico resetear el juego simplemente mantendre la transicion plana
@@ -342,14 +340,13 @@ class JuegoModelo:
                 lista.append(obj)
         return lista
 
-    def addPlayer(self):
-        pass
     def newObstacle(self,x,y):
         obstacle=Obstacle(30,x,y)
         self.estadoActual.append(obstacle)
         pass
     def newFood(self,x,y):
         food=Obstacle(7,x,y)
+        food.tipo = 2
         food.color=(0,255,0)
         food.velX = 0
         food.velY = 0
@@ -358,6 +355,7 @@ class JuegoModelo:
         self.estadoActual.append(food)
     def newPersecutor(self,x,y):
         obstacle=Obstacle(30,x,y)
+        obstacle.tipo = 3
         obstacle.isPersecutor = True
         obstacle.velModulo = 3
         self.estadoActual.append(obstacle)

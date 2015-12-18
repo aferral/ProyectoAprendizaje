@@ -5,28 +5,29 @@ def changeRef(newOr,actualPoint):
 class VectorCustom:
 
     def __init__(self):
-        self.vals = []
+        self.vals = {}
         pass
-    def add(self,val):
-        self.vals.append(val)
+    def add(self,name,val):
+        self.vals[name] = val
     def __len__(self):
         return len(self.vals)
     def __getitem__(self, item):
-        return self.vals[int(item)]
+        return self.vals[item]
+    def __setitem__(self, key, value):
+        self.vals[key] = value
     def __repr__(self):
         out = ''
         for elem in self.vals:
-            out += '{0:.3f}'.format(elem)+', '
+            out += str(elem)+' {0:.3f}'.format(self.vals[elem])+' | '
         return out
-    def __setitem__(self, key, value):
-        self.vals[key] = value
+
     def __mul__(self, y ):
 
         sum = 0
         x = self
         if len(x) != len(y):
             raise Exception("Error vector dimension",len(x),len(y))
-        for inde,val in enumerate(y.vals):
-            sum += (x[inde] * val)
+        for val in y.vals:
+            sum += (x[val] * y[val])
         return sum
 
