@@ -27,7 +27,7 @@ def fabricaJuego(args):
     nuevoJuego.generateRandomPersecutor(args.persecutoresEnemies)
 
     nuevoJuego.setFeatureArg(args.feature)
-
+    nuevoJuego.setPlayer(int(args.humanOrCpu))
     if args.training:
         trainGame = JuegoModelo()
 
@@ -138,8 +138,7 @@ def experiment(constTime,args):
     #Plotea que las iteracionse de entrenamiento y el scorePromedio obtenido
 
     if (plotPosible):
-        plt.plot(nTrain,allTheScores,'*--')
-        pylab.save('pdat.dat',(nTrain,allTheScores))
+        plt.plot(nTrain,allTheScores,'*')
         plt.show()
 
     print "Resultados "
@@ -331,10 +330,11 @@ parser.add_argument(dest="nEnemies", type=int,help="Cuantos meteoros colocar", d
 parser.add_argument(dest="persecutoresEnemies", type=int,help="Cuantos meteoros colocar", default=3, nargs='?')
 
 parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDist", default='foodDist', nargs='?')
-parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=40, nargs='?')
+parser.add_argument(dest="Food", type=int,help="Cuanta food colocar", default=40, nargs='?')
 
 parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
 parser.add_argument(dest='ExpOrRun',help="0 experiment,  1 visualGame, 2 jugar desde 0", default=2, nargs='?')
+parser.add_argument(dest='humanOrCpu',help="0 human 1 cpu", default=1, nargs='?')
 
 parser.add_argument(dest='debugGrap',help="0 False,  1 True", default=0, nargs='?')
 

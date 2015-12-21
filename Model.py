@@ -54,6 +54,7 @@ class Obstacle():
         self.color = (255,0,0)
         self.radio = 5
         self.distVision = self.radio + 10
+        self.velModulo = 4
 
     def teleport(self,point):
         self.x = point[0]
@@ -113,6 +114,7 @@ class Obstacle():
 class JuegoModelo:
     def __init__(self):
 
+        self.cpuControl = False
 
         self.probSpawn = 0.03
 
@@ -234,8 +236,10 @@ class JuegoModelo:
 
         playerObj = getPlayer(self.estadoActual)
         playerObj.update(tiempo)
-        self.VerifyPlayer(tiempo, playerObj)
-
+        if self.traspasarPared:
+            self.VerifyPlayer(tiempo, playerObj)
+        else:
+            self.wallColl(playerObj)
         #Hago todos lso mov
         for stalker in self.listaPersecutores:
             stalker.Perseguir(playerObj)
@@ -268,7 +272,8 @@ class JuegoModelo:
         self.observe(self.estadoAnt,self.estadoActual,self.lastAction,reward)
 
         #Aca va el observe
-        self.doAction(self.estadoActual,self.planner.getBestAction(self.estadoActual))
+        if self.cpuControl:
+            self.doAction(self.estadoActual,self.planner.getBestAction(self.estadoActual))
         pass
     def calculateReward(self,estado):
         acumulative=0
@@ -408,8 +413,7 @@ class JuegoModelo:
                 if angulo == 0:
                     jugador.setNorth((newX,newY))
 
-                #else:
-                    #self.superestados[index]=(None)
+
             else:
                 self.superestados[index]=((newX,newY))
                 acciones.append(auxangulo)
