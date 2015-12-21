@@ -176,6 +176,7 @@ class NeuronalQAgentOnline(AbstractQAgent):
 
     def configure(self,juego,inputLen):
         AbstractQAgent.configure(self,juego,inputLen)
+        #lerng 0.5 momento 0.01
         self.network = MLP_NeuralNetwork(self.inputLen-1+1, 3, 1, iterations = 10, learning_rate = 0.5, momentum = 0.01, rate_decay = 0.01)
 
     def formatInputActions(self,estado,accion):
@@ -209,9 +210,35 @@ class NeuronalQAgentOnline(AbstractQAgent):
 
         if (not self.aprendizaje):
             return
+        """ Esto no funciono
+        (s1,action,s2,reward) = (estado,accion,proxState,reward)
+        target = reward + self.discount * self.getMaxQValue(s2)
+        target = Neuron.tanh(target)
+
+        inputs = self.formatInputActions(s1,action)
+
+        #Actualizo el valor
+        self.network.feedForward(inputs)
+        self.network.backPropagate([target])
+
+        #Realizo algunas cuantas iteraciones para actualizar otros valores
+        interval = min(len(self.bolsa),10)
+        for i in range(interval):
+            index = random.randint(0,len(self.bolsa)-1)
+            #print len(self.bolsa),index
+            (s1,action,s2,reward) = self.bolsa[index]
+            target = reward + self.discount * self.getMaxQValue(s2)
+            target = Neuron.tanh(target)
+
+            inputs = self.formatInputActions(s1,action)
+
+            self.network.feedForward(inputs)
+            self.network.backPropagate([target])
+
+        self.bolsa.append((s1,action,s2,reward))
+        """
         target = reward + self.discount * self.getMaxQValue(proxState)
         target = Neuron.tanh(target)
         self.bolsa.append([self.formatInputActions(estado,accion),[target] ])
 
         self.network.train(self.bolsa)
-

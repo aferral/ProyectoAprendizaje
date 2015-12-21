@@ -130,8 +130,8 @@ class JuegoModelo:
         self.lastAction = 0
         self.lastRew = 0
 
-        self.planner = AproximateQAgent()
-        #self.planner = NeuronalQAgentOnline()
+        #self.planner = AproximateQAgent()
+        self.planner = NeuronalQAgentOnline()
 
         #Cosas de bordes
         width = 800
@@ -222,6 +222,10 @@ class JuegoModelo:
     def updateGame(self,tiempo):
         self.iteraciones += 1
         # print self.iteraciones
+
+        if self.iteraciones > 1000:
+            print self.score
+            exit(1)
 
         if random() < self.probSpawn:
             self.generateRandomFoods(1)

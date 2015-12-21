@@ -11,6 +11,23 @@ np.seterr(all = 'ignore')
 # IMPORTANT: when using the logit (sigmoid) transfer function for the output layer make sure y values are scaled from 0 to 1
 # if you use the tanh for the output then you should scale between -1 and 1
 # we will use sigmoid for the output layer and tanh for the hidden layer
+
+
+
+
+""" Esta red neuronal la adapte con salida mediante tanh ya que quiero estimar que tan bueno es cierto estado. Entonces -1 sera el peor estado posible
+mientras que +1 sera el mejor posible. Es importante que todo valor de refuerzo debe estar en en los rangos de -1 a 1 sino
+el refuerzo puede hacer cosas locass
+
+"""
+
+
+
+
+
+
+
+
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 

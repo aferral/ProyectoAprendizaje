@@ -1,4 +1,5 @@
 import copy
+import pylab
 from Model import JuegoModelo
 import sys
 import argparse
@@ -45,6 +46,48 @@ def fabricaJuego(args):
     return nuevoJuego
 
 
+def testVsAleatorio(args):
+    allTheScores = []
+
+    #Cuanto debe durar el juego en que se prueba (iteraciones)
+    iteracionesTest = 100
+
+    #Cuantas veces se vuelve a probar
+    repePerWei = 10
+    intentos = 10
+
+    scoreGloal = 0
+
+    for j in range(repePerWei):
+
+        #Entrena con iteracionTrain entrenamiento dentro de fabrica
+        print "Comienzan experimentos con inicio random "
+        argsTouse= args
+        argsTouse.training = 0
+        modeloPruebas = fabricaJuego(argsTouse)
+
+        modeloPruebas.planner.randomWeight()
+
+        modeloPruebas.planner.endLearning()
+
+
+        #Ahora creo modelos con esos pesos y los pruebo en ambientes aleatorios
+        averageScore = 0
+        for i in range(intentos):
+            nuevoTest = fabricaJuego(argsTouse)
+            print "pesos de generados aleatoriamente ",nuevoTest.planner.getWeights()
+            nuevoTest.planner.setWeight(modeloPruebas.planner)
+            averageScore += testModel(nuevoTest,constTime,iteracionesTest)
+        averageScore /= intentos
+        print "Acabo de terminar un modelo aleatorio con un score de ",averageScore
+
+        scoreGloal += averageScore
+        #Plotea que las iteracionse de entrenamiento y el scorePromedio obtenido
+
+    print "Resultados "
+    scoreGloal /= (repePerWei*1.0)
+    print (scoreGloal)
+
 #Def functiones de entrenamiento y prueba
 
 def trainModel(juego,constTime,iterations):
@@ -77,10 +120,12 @@ def experiment(constTime,args):
         argTrain.training = iteracionTrain
         modeloPruebas = fabricaJuego(argTrain)
 
+        #Consigo pesos del modelo entrenado
         weightTrained = modeloPruebas.planner.weights
         argNoTrain = args
         argNoTrain.training = 0
 
+        #Ahora creo modelos con esos pesos y los pruebo en ambientes aleatorios
         averageScore = 0
         for i in range(repe):
             nuevoTest = fabricaJuego(argNoTrain)
@@ -94,6 +139,7 @@ def experiment(constTime,args):
 
     if (plotPosible):
         plt.plot(nTrain,allTheScores,'*--')
+        pylab.save('pdat.dat',(nTrain,allTheScores))
         plt.show()
 
     print "Resultados "
@@ -212,6 +258,7 @@ class JuegoVisual:
 
     def loop(self):
         difAngul = 0
+        acel = 0
         while not self.done:
             # Clear the screen
             self.screen.fill(WHITE)
@@ -222,24 +269,28 @@ class JuegoVisual:
                 self.drawQvalues()
 
             control = 0
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.done = True
                 if event.type == KEYUP:
                     difAngul = 0
+
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
                         print "Izq"
-                        difAngul = 0.1
+                        difAngul = -0.1
+                        acel-=0.01
                     if event.key == pygame.K_RIGHT:
                         print "Derecha"
-                        difAngul = -0.1
+                        difAngul = 0.1
+                        acel+=0.01
                     if event.key == pygame.K_UP:
                         print "Arriba"
                     if event.key == pygame.K_DOWN:
                         print "Down"
                         pygame.display.flip()
-            self.movePlayer(difAngul)
+            self.movePlayer(difAngul+acel*acel)
             listaObjetos = self.juegomodelo.estadoActual
             self.juegomodelo.updateGame(constTime)
             for elem in listaObjetos:
@@ -279,11 +330,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument(dest="nEnemies", type=int,help="Cuantos meteoros colocar", default=7, nargs='?')
 parser.add_argument(dest="persecutoresEnemies", type=int,help="Cuantos meteoros colocar", default=3, nargs='?')
 
-parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDist", default='justDist', nargs='?')
+parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDist", default='foodDist', nargs='?')
 parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=40, nargs='?')
 
 parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
-parser.add_argument(dest='ExpOrRun',help="0 experiment,  1 visualGame, 2 jugar desde 0", default=0, nargs='?')
+parser.add_argument(dest='ExpOrRun',help="0 experiment,  1 visualGame, 2 jugar desde 0", default=2, nargs='?')
 
 parser.add_argument(dest='debugGrap',help="0 False,  1 True", default=0, nargs='?')
 
@@ -296,7 +347,7 @@ print args
 
 
 #Debe ser necesario crear pesos aleatorios
-
+#testVsAleatorio(args)
 
 #SI es 1 se juega con modo normal visual
 if args.ExpOrRun == 1:
