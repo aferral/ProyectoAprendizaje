@@ -4,6 +4,7 @@ from Model import JuegoModelo
 import sys
 import argparse
 import pygame
+from QlearningAgent import AproximateQAgent, NeuronalQAgentOnline
 from utils import *
 __author__ = 'aferral'
 
@@ -26,6 +27,12 @@ def fabricaJuego(args):
     nuevoJuego.generateRandomFoods(args.Food)
     nuevoJuego.generateRandomPersecutor(args.persecutoresEnemies)
 
+    if args.planner:
+        print "Planner red neuronal"
+        nuevoJuego.configurePlanner(NeuronalQAgentOnline())
+    else:
+        print "Planner combinacion lineal"
+        nuevoJuego.configurePlanner(AproximateQAgent())
     nuevoJuego.setFeatureArg(args.feature)
 
     if args.training:
@@ -34,6 +41,13 @@ def fabricaJuego(args):
         trainGame.generateRandomObs(args.nEnemies)
         trainGame.generateRandomFoods(args.Food)
         trainGame.generateRandomPersecutor(args.persecutoresEnemies)
+
+        if args.planner:
+            print "Planner red neuronal"
+            trainGame.configurePlanner(NeuronalQAgentOnline())
+        else:
+            print "Planner combinacion lineal"
+            trainGame.configurePlanner(AproximateQAgent())
 
         trainGame.setFeatureArg(args.feature)
 
@@ -266,7 +280,7 @@ class JuegoVisual:
             if self.modoStep:
                 raw_input()
                 #Aca dibujar mapa de features
-                self.drawQvalues()
+                #self.drawQvalues()
 
             control = 0
 
@@ -310,15 +324,15 @@ class JuegoVisual:
             # Limit to X frames per second
             self.clock.tick(fps)
 
-            far = pygame.font.SysFont("comicsansms", 12)
+            far = pygame.font.SysFont("comicsansms", 20)
             text = far.render("Weight "+str(self.juegomodelo.planner.weights), True, (0, 0, 0))
             self.screen.blit(text, (20, 20))
 
             text = far.render("Deaths "+str(self.juegomodelo.countDeath), True, (0, 0, 0))
-            self.screen.blit(text, (500, 20))
+            self.screen.blit(text, (20, 40))
 
             text = far.render("Score "+str(self.juegomodelo.score), True, (0, 0, 0))
-            self.screen.blit(text, (600, 20))
+            self.screen.blit(text, (20, 60))
             # Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
 
@@ -327,16 +341,18 @@ class JuegoVisual:
 
 #Mejor desempeno con 1000 training red neuronal en modo de pre-test
 parser = argparse.ArgumentParser()
-parser.add_argument(dest="nEnemies", type=int,help="Cuantos meteoros colocar", default=7, nargs='?')
-parser.add_argument(dest="persecutoresEnemies", type=int,help="Cuantos meteoros colocar", default=3, nargs='?')
+parser.add_argument("-En",dest="nEnemies", type=int,help="Cuantos meteoros colocar", default=7, nargs='?')
+parser.add_argument("-PEn",dest="persecutoresEnemies", type=int,help="Cuantos meteoros colocar", default=3, nargs='?')
 
-parser.add_argument(dest='feature', type=str,help="justDist, borderDist, foodDist", default='foodDist', nargs='?')
-parser.add_argument(dest="Food", type=int,help="Cuantos meteoros colocar", default=40, nargs='?')
+parser.add_argument("-f",dest='feature', type=str,help="justDist, borderDist, foodDist", default='foodDist', nargs='?')
+parser.add_argument("-foodn",dest="Food", type=int,help="Cuantos meteoros colocar", default=40, nargs='?')
 
-parser.add_argument(dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
-parser.add_argument(dest='ExpOrRun',help="0 experiment,  1 visualGame, 2 jugar desde 0", default=2, nargs='?')
+parser.add_argument("-p",dest='planner',help="0 linear combination,  1 neuronal", default=0, nargs='?')
 
-parser.add_argument(dest='debugGrap',help="0 False,  1 True", default=0, nargs='?')
+parser.add_argument("-train",dest='training',help="0 No pre training 1 pre Training", default=1000, nargs='?')
+parser.add_argument("-m",dest='ExpOrRun',help="0 experiment,  1 visualGame, 2 jugar desde 0", default=1, nargs='?')
+
+parser.add_argument("-d",dest='debugGrap',help="0 False,  1 True", default=0, nargs='?')
 
 args = parser.parse_args()
 print args
@@ -350,6 +366,7 @@ print args
 #testVsAleatorio(args)
 
 #SI es 1 se juega con modo normal visual
+args.ExpOrRun = int(args.ExpOrRun)
 if args.ExpOrRun == 1:
     modeloReal = fabricaJuego(args)
     vista = JuegoVisual(modeloReal)

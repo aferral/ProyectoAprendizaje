@@ -177,7 +177,7 @@ class NeuronalQAgentOnline(AbstractQAgent):
     def configure(self,juego,inputLen):
         AbstractQAgent.configure(self,juego,inputLen)
         #lerng 0.5 momento 0.01
-        self.network = MLP_NeuralNetwork(self.inputLen-1+1, 3, 1, iterations = 10, learning_rate = 0.5, momentum = 0.01, rate_decay = 0.01)
+        self.network = MLP_NeuralNetwork(self.inputLen-1+1, 3, 1, iterations = 1, learning_rate = 0.5, momentum = 0.01, rate_decay = 0.01)
 
     def formatInputActions(self,estado,accion):
         vector = []
@@ -241,4 +241,5 @@ class NeuronalQAgentOnline(AbstractQAgent):
         target = Neuron.tanh(target)
         self.bolsa.append([self.formatInputActions(estado,accion),[target] ])
 
+        #self.network.train([[self.formatInputActions(estado,accion),[target]] ])
         self.network.train(self.bolsa)

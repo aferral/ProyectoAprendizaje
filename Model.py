@@ -91,8 +91,8 @@ class Obstacle():
     def draw(self):
         if self.screen != None:
             pygame.draw.circle(self.screen,self.color,(int(self.x),int(self.y)),self.radio,1)
-        if self.player:
-            pygame.draw.line(self.screen, (0,0,0), (int(self.x),int(self.y)), self.northPoint, 1)
+        #if self.player:
+            #pygame.draw.line(self.screen, (0,0,0), (int(self.x),int(self.y)), self.northPoint, 1)
 
     def setNorth(self,point):
         self.northPoint = point
@@ -130,8 +130,9 @@ class JuegoModelo:
         self.lastAction = 0
         self.lastRew = 0
 
+        self.planner = None
         #self.planner = AproximateQAgent()
-        self.planner = NeuronalQAgentOnline()
+        #self.planner = NeuronalQAgentOnline()
 
         #Cosas de bordes
         width = 800
@@ -174,7 +175,8 @@ class JuegoModelo:
 
         pass
 
-
+    def configurePlanner(self,planner):
+        self.planner = planner
 
     def VerifyPlayer(self,time,obj):
         for i in range(4):
@@ -223,9 +225,11 @@ class JuegoModelo:
         self.iteraciones += 1
         # print self.iteraciones
 
+        """
         if self.iteraciones > 1000:
             print self.score
             exit(1)
+            """
 
         if random() < self.probSpawn:
             self.generateRandomFoods(1)
@@ -360,6 +364,7 @@ class JuegoModelo:
     def newPersecutor(self,x,y):
         obstacle=Obstacle(30,x,y)
         obstacle.tipo = 3
+        obstacle.color = (255,0,0)
         obstacle.isPersecutor = True
         obstacle.velModulo = 3
         self.estadoActual.append(obstacle)
